@@ -1,0 +1,12 @@
+# Python bytecode
+__pycache__/
+
+# Virtual Environment
+venv/
+env/
+
+# Environment variables / Secrets
+.env
+
+# Streamlit (Kita biarkan folder ini agar bisa simpan secrets lokal)
+# .streamlit/
