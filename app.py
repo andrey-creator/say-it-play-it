@@ -9,8 +9,8 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 2. CACHING DATA (Solusi agar tidak lambat/loading terus)
-@st.cache_data(ttl=3600)  # Data disimpan di memori selama 1 jam
+# 2. CACHING DATA
+@st.cache_data(ttl=3600)
 def get_photos_from_github(folder_path):
     username = "andrey-creator"
     repo = "say-it-play-it"
@@ -20,7 +20,6 @@ def get_photos_from_github(folder_path):
         response = requests.get(url, timeout=10)
         if response.status_code == 200:
             files = response.json()
-            # Filter hanya file gambar
             image_urls = [file['download_url'] for file in files if file['name'].lower().endswith(('png', 'jpg', 'jpeg', 'webp'))]
             return image_urls
     except Exception as e:
@@ -57,7 +56,6 @@ st.markdown("""
         margin-bottom: 30px;
     }
 
-    /* Tombol Style */
     div.stButton > button {
         transition: all 0.3s ease;
         border: 1px solid #00f2ff !important;
@@ -73,7 +71,6 @@ st.markdown("""
         color: black !important;
     }
 
-    /* Label Gambar */
     .img-label {
         text-align: center; 
         font-family: 'Rajdhani', sans-serif; 
@@ -128,7 +125,16 @@ if st.session_state.menu_pilihan == 'Home':
                 set_page('Feedback')
                 st.rerun()
 
-# --- HALAMAN REQUEST & FEEDBACK (IFRAME) ---
+        # MOTTO DI HALAMAN UTAMA (Sudah diperbaiki posisinya)
+        st.markdown("""
+            <div style="text-align: center; margin-top: 40px; padding: 20px; border-top: 1px solid rgba(0, 242, 255, 0.2);">
+                <p style="font-family: 'Rajdhani', sans-serif; color: #00f2ff; letter-spacing: 2px; font-size: 1.1rem; font-weight: 500; font-style: italic;">
+                    "United we stand • Divided we fall • Never be defeated"
+                </p>
+            </div>
+        """, unsafe_allow_html=True)
+
+# --- HALAMAN REQUEST & FEEDBACK ---
 elif st.session_state.menu_pilihan in ['Request', 'Feedback']:
     _, cb, _ = st.columns([2, 1, 2])
     with cb: 
@@ -172,10 +178,8 @@ elif st.session_state.menu_pilihan == 'Galeri':
         if images:
             cols = st.columns(3)
             for idx, img_url in enumerate(images):
-                # Ekstrak nama file tanpa ekstensi
                 file_name = img_url.split('/')[-1].split('.')[0]
                 clean_name = file_name.replace('-', ' ').replace('_', ' ').upper()
-
                 with cols[idx % 3]: 
                     st.image(img_url, use_container_width=True)
                     st.markdown(f'<p class="img-label">{clean_name}</p>', unsafe_allow_html=True)
@@ -191,3 +195,26 @@ with st.sidebar:
         pw = st.text_input("ACCESS CODE", type="password")
         if pw == "AndreEC2026":
             st.link_button("DATABASE", "https://docs.google.com/spreadsheets/d/13a0SStLqMqXMO8fgUImPyMI8jhSEMMQJTE7hQSIYInY/edit?gid=1587199457#gid=1587199457", use_container_width=True)
+
+# --- FOOTER / COPYRIGHT (Paling bawah agar tidak terputus rerun) ---
+st.markdown("""
+    <div style="
+        position: fixed;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        background-color: rgba(5, 7, 10, 0.9);
+        color: #00f2ff;
+        text-align: center;
+        padding: 10px 0;
+        font-family: 'Rajdhani', sans-serif;
+        font-size: 0.8rem;
+        letter-spacing: 2px;
+        border-top: 1px solid rgba(0, 242, 255, 0.2);
+        backdrop-filter: blur(5px);
+        z-index: 999;
+    ">
+        © 2026 • ARYASATYA KEANDRE - DAVIN PRIMA • ENGLISH CLUB • SMAN 1 DEPOK
+    </div>
+    <div style="margin-bottom: 80px;"></div>
+""", unsafe_allow_html=True)
