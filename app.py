@@ -1,7 +1,6 @@
 import streamlit as st
 import requests
 
-# 1. KONFIGURASI HALAMAN
 st.set_page_config(
     page_title="SAY IT, PLAY IT!", 
     page_icon="🎙️", 
@@ -9,7 +8,6 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 2. CACHING DATA
 @st.cache_data(ttl=3600)
 def get_photos_from_github(folder_path):
     username = "andrey-creator"
@@ -26,13 +24,11 @@ def get_photos_from_github(folder_path):
         return []
     return []
 
-# 3. INISIALISASI STATE
 if 'menu_pilihan' not in st.session_state:
     st.session_state.menu_pilihan = 'Home'
 if 'sub_menu_galeri' not in st.session_state:
     st.session_state.sub_menu_galeri = None
 
-# 4. CSS UNTUK INTERFACE PREMIUM
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap');
@@ -84,12 +80,10 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- FUNGSI NAVIGASI ---
 def set_page(name):
     st.session_state.menu_pilihan = name
     st.session_state.sub_menu_galeri = None
 
-# --- SIDEBAR & HEADER LOGIC ---
 if st.session_state.menu_pilihan == 'Home':
     st.markdown("<style>[data-testid='stSidebar'], [data-testid='collapsedControl'], header {display: none; visibility: hidden;}</style>", unsafe_allow_html=True)
 
@@ -101,7 +95,6 @@ st.markdown(f"""
     </div>
     """, unsafe_allow_html=True)
 
-# --- HALAMAN UTAMA ---
 if st.session_state.menu_pilihan == 'Home':
     _, col_center, _ = st.columns([1, 2, 1])
     with col_center:
@@ -125,7 +118,6 @@ if st.session_state.menu_pilihan == 'Home':
                 set_page('Feedback')
                 st.rerun()
 
-        # MOTTO DI HALAMAN UTAMA (Sudah diperbaiki posisinya)
         st.markdown("""
             <div style="text-align: center; margin-top: 40px; padding: 20px; border-top: 1px solid rgba(0, 242, 255, 0.2);">
                 <p style="font-family: 'Rajdhani', sans-serif; color: #00f2ff; letter-spacing: 2px; font-size: 1.1rem; font-weight: 500; font-style: italic;">
@@ -134,20 +126,37 @@ if st.session_state.menu_pilihan == 'Home':
             </div>
         """, unsafe_allow_html=True)
 
-# --- HALAMAN REQUEST & FEEDBACK ---
 elif st.session_state.menu_pilihan in ['Request', 'Feedback']:
     _, cb, _ = st.columns([2, 1, 2])
     with cb: 
-        if st.button("⬅️ DASHBOARD"): set_page('Home'); st.rerun()
+        if st.button("⬅️ DASHBOARD"): 
+            set_page('Home')
+            st.rerun()
     
-    url_form = "https://docs.google.com/forms/d/e/1FAIpQLSel5biF_8tox1dWjFDwHUdyvgJ7Wq1LeCMsmKGeACCR4zxgbQ/viewform" if st.session_state.menu_pilihan == 'Request' else "https://docs.google.com/forms/d/e/1FAIpQLSe78jlTfLisNf0eukcchESd9Ti9P25ATij1CHX5mhDx49iMxQ/viewform"
-    
-    st.write("##")
-    _, col_form, _ = st.columns([1, 6, 1])
-    with col_form:
-        st.components.v1.iframe(f"{url_form}?embedded=true", height=800, scrolling=True)
+    if st.session_state.menu_pilihan == 'Request':
+        form_url = "https://docs.google.com/forms/d/e/1FAIpQLSel5biF_8tox1dWjFDwHUdyvgJ7Wq1LeCMsmKGeACCR4zxgbQ/viewform"
+        header_text = "REQUEST YOUR SONG"
+        btn_label = "OPEN REQUEST FORM"
+        desc_text = "Click the button below to suggest your favorite tracks for our next session."
+    else:
+        form_url = "https://docs.google.com/forms/d/e/1FAIpQLSeDaPA8ftqOYm35gT2y6f5BWBwerICz07DmanAVjcLVfLRIZQ/viewform?usp=dialog"
+        header_text = "CLUB FEEDBACK"
+        btn_label = "OPEN FEEDBACK FORM"
+        desc_text = "Share your thoughts or suggestions to help us improve the English Club."
 
-# --- HALAMAN GALERI ---
+    st.write("##")
+    _, col_content, _ = st.columns([1, 2, 1])
+    with col_content:
+        st.markdown(f"""
+            <div style="text-align: center; padding: 30px; border: 1px solid rgba(0, 242, 255, 0.3); border-radius: 15px; background: rgba(0, 242, 255, 0.05);">
+                <h2 style="font-family: 'Orbitron'; color: #00f2ff; margin-bottom: 20px;">{header_text}</h2>
+                <p style="font-family: 'Rajdhani'; color: white; font-size: 1.1rem; margin-bottom: 30px;">{desc_text}</p>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        st.write("##")
+        st.link_button(btn_label, form_url, use_container_width=True)
+
 elif st.session_state.menu_pilihan == 'Galeri':
     _, cb, _ = st.columns([2, 1, 2])
     with cb: 
@@ -186,7 +195,6 @@ elif st.session_state.menu_pilihan == 'Galeri':
         else:
             st.warning("No files found.")
 
-# --- SIDEBAR ---
 with st.sidebar:
     st.markdown("<p style='font-family:Orbitron; color:#00f2ff; font-size:0.7rem;'>CONTROL STATION</p>", unsafe_allow_html=True)
     if st.button("REBOOT"): set_page('Home'); st.rerun()
@@ -196,7 +204,6 @@ with st.sidebar:
         if pw == "AndreEC2026":
             st.link_button("DATABASE", "https://docs.google.com/spreadsheets/d/13a0SStLqMqXMO8fgUImPyMI8jhSEMMQJTE7hQSIYInY/edit?gid=1587199457#gid=1587199457", use_container_width=True)
 
-# --- FOOTER / COPYRIGHT (Paling bawah agar tidak terputus rerun) ---
 st.markdown("""
     <div style="
         position: fixed;
