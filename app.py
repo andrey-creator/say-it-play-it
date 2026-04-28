@@ -1,5 +1,6 @@
 import streamlit as st
 import requests
+from urllib.parse import unquote
 
 st.set_page_config(
     page_title="SAY IT, PLAY IT!", 
@@ -187,8 +188,11 @@ elif st.session_state.menu_pilihan == 'Galeri':
         if images:
             cols = st.columns(3)
             for idx, img_url in enumerate(images):
-                file_name = img_url.split('/')[-1].split('.')[0]
-                clean_name = file_name.replace('-', ' ').replace('_', ' ').upper()
+                # Memperbaiki nama file agar tidak ada %20
+                file_name_encoded = img_url.split('/')[-1].split('.')[0]
+                file_name_decoded = unquote(file_name_encoded)
+                clean_name = file_name_decoded.replace('-', ' ').replace('_', ' ').upper()
+                
                 with cols[idx % 3]: 
                     st.image(img_url, use_container_width=True)
                     st.markdown(f'<p class="img-label">{clean_name}</p>', unsafe_allow_html=True)
