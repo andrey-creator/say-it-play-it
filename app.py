@@ -2,15 +2,23 @@ import streamlit as st
 import requests
 from urllib.parse import unquote
 
+# --- REVISI SET_PAGE_CONFIG ---
 st.set_page_config(
-    page_title="SAY IT, PLAY IT!", 
+    page_title="English Club SMAN 1 Depok", 
     page_icon="🎙️", 
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="collapsed",
+    menu_items={
+        'Get Help': 'https://ec-sman1depok.streamlit.app/',
+        'Report a bug': None,
+        'About': "# Dashboard English Club SMAN 1 Depok. \nTempat galeri aktivitas, request lagu, dan kirim feedback!"
+    }
 )
+# ------------------------------
 
 @st.cache_data(ttl=3600)
 def get_photos_from_github(folder_path):
+
     username = "andrey-creator"
     repo = "say-it-play-it"
     url = f"https://api.github.com/repos/{username}/{repo}/contents/photos/{folder_path}"
