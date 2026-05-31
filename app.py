@@ -18,7 +18,6 @@ st.set_page_config(
 
 @st.cache_data(ttl=3600)
 def get_photos_from_github(folder_path):
-
     username = "andrey-creator"
     repo = "say-it-play-it"
     url = f"https://api.github.com/repos/{username}/{repo}/contents/photos/{folder_path}"
@@ -38,11 +37,10 @@ if 'menu_pilihan' not in st.session_state:
 if 'sub_menu_galeri' not in st.session_state:
     st.session_state.sub_menu_galeri = None
 
+# CSS Custom - Menghapus background-color .main agar sinkron dengan config.toml
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap');
-    
-    .main { background-color: #05070a; }
     
     .header-container { text-align: center; padding: 20px 0; }
     .logo-img { width: 100px; filter: invert(1) drop-shadow(0 0 12px #00f2ff); border-radius: 50%; }
@@ -196,7 +194,6 @@ elif st.session_state.menu_pilihan == 'Galeri':
         if images:
             cols = st.columns(3)
             for idx, img_url in enumerate(images):
-                # Memperbaiki nama file agar tidak ada %20
                 file_name_encoded = img_url.split('/')[-1].split('.')[0]
                 file_name_decoded = unquote(file_name_encoded)
                 clean_name = file_name_decoded.replace('-', ' ').replace('_', ' ').upper()
