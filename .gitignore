@@ -9,4 +9,5 @@ env/
 .env
 
 # Streamlit (Kita biarkan folder ini agar bisa simpan secrets lokal)
-# .streamlit/
+# .streamlit/.streamlit/secrets.toml 
+.streamlit/secrets.toml 
