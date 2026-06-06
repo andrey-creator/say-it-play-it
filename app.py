@@ -2,7 +2,8 @@ import streamlit as st
 import requests
 from urllib.parse import unquote
 
-# --- REVISI SET_PAGE_CONFIG ---
+DAFTAR_BATCH = ["batch-2025-2026", "batch-2026-2027"]
+
 st.set_page_config(
     page_title="English Club SMAN 1 Depok", 
     page_icon="🎙️", 
@@ -14,9 +15,8 @@ st.set_page_config(
         'About': "# Dashboard English Club SMAN 1 Depok. \nTempat galeri aktivitas, request lagu, dan kirim feedback!"
     }
 )
-# ------------------------------
 
-@st.cache_data(ttl=2) # Menggunakan 2 detik khusus localhost agar sinkronisasi foto baru instan
+@st.cache_data(ttl=2)
 def get_photos_from_github(folder_path):
     username = "andrey-creator"
     repo = "say-it-play-it"
@@ -25,29 +25,27 @@ def get_photos_from_github(folder_path):
     headers = {
         "Accept": "application/vnd.github.v3+json"
     }
-    # Membaca token keamanan dari Streamlit Secrets agar terhindar dari pembatasan API (60 req/jam)
     if "GITHUB_TOKEN" in st.secrets:
         headers["Authorization"] = f"token {st.secrets['GITHUB_TOKEN']}"
     
     try:
         response = requests.get(url, headers=headers, timeout=10)
-        
-        # Log otomatis ke Terminal/CMD laptop untuk mempermudah tracking di localhost
         print(f"[DEBUG LOCALHOST] URL: {url} | STATUS CODE: {response.status_code}")
         
         if response.status_code == 200:
             files = response.json()
             if isinstance(files, list):
-                # Membaca file gambar dan membalik urutannya agar upload terbaru berada di atas
-                image_urls = [file['download_url'] for file in files if file['name'].lower().endswith(('png', 'jpg', 'jpeg', 'webp'))]
+                image_urls = [
+                    file['download_url'] for file in files 
+                    if file['name'].lower().endswith(('png', 'jpg', 'jpeg', 'webp'))
+                ]
                 image_urls.reverse() 
                 return image_urls
         else:
-            # Jika ada kendala, tampilkan status error spesifik di sidebar agar mudah dideteksi
             st.sidebar.error(f"GitHub API Error: {response.status_code}")
             if response.status_code == 404:
                 st.sidebar.info(f"Tips: Pastikan di GitHub sudah ada folder 'photos/{folder_path}' dan berisi minimal 1 foto.")
-    except Exception as e:
+    except Exception:
         return []
     return []
 
@@ -56,9 +54,8 @@ if 'menu_pilihan' not in st.session_state:
 if 'sub_menu_galeri' not in st.session_state:
     st.session_state.sub_menu_galeri = None
 if 'angkatan_pilihan' not in st.session_state:
-    st.session_state.angkatan_pilihan = 'batch-2025-2026' # <-- Default value bahasa Inggris
+    st.session_state.angkatan_pilihan = DAFTAR_BATCH[0]
 
-# CSS Custom - Menghapus background-color .main agar sinkron dengan config.toml
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap');
@@ -113,7 +110,10 @@ def set_page(name):
     st.session_state.sub_menu_galeri = None
 
 if st.session_state.menu_pilihan == 'Home':
-    st.markdown("<style>[data-testid='stSidebar'], [data-testid='collapsedControl'], header {display: none; visibility: hidden;}</style>", unsafe_allow_html=True)
+    st.markdown(
+        "<style>[data-testid='stSidebar'], [data-testid='collapsedControl'], header {display: none; visibility: hidden;}</style>", 
+        unsafe_allow_html=True
+    )
 
 st.markdown(f"""
     <div class="header-container">
@@ -123,7 +123,6 @@ st.markdown(f"""
     </div>
     """, unsafe_allow_html=True)
 
-# --- MENU HOME ---
 if st.session_state.menu_pilihan == 'Home':
     _, col_center, _ = st.columns([1, 2, 1])
     with col_center:
@@ -155,7 +154,6 @@ if st.session_state.menu_pilihan == 'Home':
             </div>
         """, unsafe_allow_html=True)
 
-# --- MENU REQUEST & FEEDBACK ---
 elif st.session_state.menu_pilihan in ['Request', 'Feedback']:
     _, cb, _ = st.columns([2, 1, 2])
     with cb: 
@@ -187,7 +185,6 @@ elif st.session_state.menu_pilihan in ['Request', 'Feedback']:
         st.write("##")
         st.link_button(btn_label, form_url, use_container_width=True)
 
-# --- MENU GALERI ---
 elif st.session_state.menu_pilihan == 'Galeri':
     _, cb, _ = st.columns([2, 1, 2])
     with cb: 
@@ -197,7 +194,6 @@ elif st.session_state.menu_pilihan == 'Galeri':
     
     st.markdown("<h2 style='text-align:center; color:#00f2ff; font-family:Orbitron;'>GALERI</h2>", unsafe_allow_html=True)
 
-    # Tahap 1: User memilih kategori utama
     if st.session_state.sub_menu_galeri is None:
         _, col_galeri, _ = st.columns([1, 2, 1])
         with col_galeri:
@@ -205,15 +201,14 @@ elif st.session_state.menu_pilihan == 'Galeri':
             with g1:
                 if st.button("👥\n\nINTEGRAL MEMBER", use_container_width=True):
                     st.session_state.sub_menu_galeri = "integral-member"
-                    st.session_state.angkatan_pilihan = "batch-2025-2026"  
+                    st.session_state.angkatan_pilihan = DAFTAR_BATCH[0]
                     st.rerun()
             with g2:
                 if st.button("📸\n\nACTIVITY", use_container_width=True):
                     st.session_state.sub_menu_galeri = "activity"
-                    st.session_state.angkatan_pilihan = "batch-2025-2026"  
+                    st.session_state.angkatan_pilihan = DAFTAR_BATCH[0]
                     st.rerun()
                     
-    # Tahap 2: Kategori sudah dipilih, tampilkan isi folder beserta dropdown batch
     else:
         c_back, _, c_select = st.columns([2, 1, 2])
         with c_back:
@@ -221,18 +216,15 @@ elif st.session_state.menu_pilihan == 'Galeri':
                 st.session_state.sub_menu_galeri = None
                 st.rerun()
         
-        # DROPDOWN BATCH DINAMIS (Berlaku global untuk member & activity)
         with c_select:
             angkatan = st.selectbox(
                 "SELECT BATCH",
-                ["batch-2025-2026", "batch-2026-2027"], 
-                index=0,
+                DAFTAR_BATCH, 
+                index=DAFTAR_BATCH.index(st.session_state.angkatan_pilihan) if st.session_state.angkatan_pilihan in DAFTAR_BATCH else 0,
                 label_visibility="collapsed"
             )
             st.session_state.angkatan_pilihan = angkatan
         
-        # Menyusun alur path pencarian dinamis otomatis:
-        # Contoh: photos/integral-member/batch-2025-2026 atau photos/activity/batch-2025-2026
         path_pencarian = f"{st.session_state.sub_menu_galeri}/{st.session_state.angkatan_pilihan}"
             
         st.write("##")
@@ -244,8 +236,6 @@ elif st.session_state.menu_pilihan == 'Galeri':
             for idx, img_url in enumerate(images):
                 file_name_encoded = img_url.split('/')[-1].split('.')[0]
                 file_name_decoded = unquote(file_name_encoded)
-                
-                # Mengubah nama berkas menjadi teks rapi (Kapital + Spasi)
                 clean_name = file_name_decoded.replace('-', ' ').replace('_', ' ').upper()
                 
                 with cols[idx % 3]: 
@@ -254,7 +244,6 @@ elif st.session_state.menu_pilihan == 'Galeri':
         else:
             st.warning("No files found in this category.")
 
-# --- SIDEBAR CONTROL & ADMIN STATION ---
 with st.sidebar:
     st.markdown("<p style='font-family:Orbitron; color:#00f2ff; font-size:0.7rem;'>CONTROL STATION</p>", unsafe_allow_html=True)
     if st.button("REBOOT"): 
@@ -266,7 +255,6 @@ with st.sidebar:
         if pw == "AndreEC2026":
             st.link_button("DATABASE", "https://docs.google.com/spreadsheets/d/13a0SStLqMqXMO8fgUImPyMI8jhSEMMQJTE7hQSIYInY/edit?gid=1587199457#gid=1587199457", use_container_width=True)
 
-# --- FOOTER CREDITS DASHBOARD ---
 st.markdown("""
     <div style="
         position: fixed;
