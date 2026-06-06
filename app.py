@@ -46,7 +46,7 @@ def get_photos_from_github(folder_path):
             # Jika ada kendala, tampilkan status error spesifik di sidebar agar mudah dideteksi
             st.sidebar.error(f"GitHub API Error: {response.status_code}")
             if response.status_code == 404:
-                st.sidebar.info("Tips: Pastikan folder di GitHub bernama 'batch-2025-2026' dan sudah terisi minimal 1 foto.")
+                st.sidebar.info(f"Tips: Pastikan di GitHub sudah ada folder 'photos/{folder_path}' dan berisi minimal 1 foto.")
     except Exception as e:
         return []
     return []
@@ -56,7 +56,7 @@ if 'menu_pilihan' not in st.session_state:
 if 'sub_menu_galeri' not in st.session_state:
     st.session_state.sub_menu_galeri = None
 if 'angkatan_pilihan' not in st.session_state:
-    st.session_state.angkatan_pilihan = 'batch-2025-2026' # <-- Default value diubah ke bahasa Inggris
+    st.session_state.angkatan_pilihan = 'batch-2025-2026' # <-- Default value bahasa Inggris
 
 # CSS Custom - Menghapus background-color .main agar sinkron dengan config.toml
 st.markdown("""
@@ -205,14 +205,15 @@ elif st.session_state.menu_pilihan == 'Galeri':
             with g1:
                 if st.button("👥\n\nINTEGRAL MEMBER", use_container_width=True):
                     st.session_state.sub_menu_galeri = "integral-member"
-                    st.session_state.angkatan_pilihan = "batch-2025-2026"  # <-- Diubah ke batch
+                    st.session_state.angkatan_pilihan = "batch-2025-2026"  
                     st.rerun()
             with g2:
                 if st.button("📸\n\nACTIVITY", use_container_width=True):
                     st.session_state.sub_menu_galeri = "activity"
+                    st.session_state.angkatan_pilihan = "batch-2025-2026"  
                     st.rerun()
                     
-    # Tahap 2: Kategori sudah dipilih, tampilkan isi folder
+    # Tahap 2: Kategori sudah dipilih, tampilkan isi folder beserta dropdown batch
     else:
         c_back, _, c_select = st.columns([2, 1, 2])
         with c_back:
@@ -220,21 +221,19 @@ elif st.session_state.menu_pilihan == 'Galeri':
                 st.session_state.sub_menu_galeri = None
                 st.rerun()
         
-        path_pencarian = st.session_state.sub_menu_galeri
+        # DROPDOWN BATCH DINAMIS (Berlaku global untuk member & activity)
+        with c_select:
+            angkatan = st.selectbox(
+                "SELECT BATCH",
+                ["batch-2025-2026", "batch-2026-2027"], 
+                index=0,
+                label_visibility="collapsed"
+            )
+            st.session_state.angkatan_pilihan = angkatan
         
-        # JALUR KHUSUS INTEGRAL MEMBER: Menggunakan susunan Dropdown Bahasa Inggris
-        if st.session_state.sub_menu_galeri == "integral-member":
-            with c_select:
-                angkatan = st.selectbox(
-                    "SELECT BATCH",
-                    ["batch-2025-2026", "batch-2026-2027"], # <-- Target ejaan folder baru di GitHub
-                    index=0,
-                    label_visibility="collapsed"
-                )
-                st.session_state.angkatan_pilihan = angkatan
-            
-            # Menggabungkan path pencarian menjadi: photos/integral-member/batch-xxxx-xxxx
-            path_pencarian = f"{st.session_state.sub_menu_galeri}/{st.session_state.angkatan_pilihan}"
+        # Menyusun alur path pencarian dinamis otomatis:
+        # Contoh: photos/integral-member/batch-2025-2026 atau photos/activity/batch-2025-2026
+        path_pencarian = f"{st.session_state.sub_menu_galeri}/{st.session_state.angkatan_pilihan}"
             
         st.write("##")
         with st.spinner("Accessing Database..."):
@@ -246,7 +245,7 @@ elif st.session_state.menu_pilihan == 'Galeri':
                 file_name_encoded = img_url.split('/')[-1].split('.')[0]
                 file_name_decoded = unquote(file_name_encoded)
                 
-                # Mengubah nama "(X5)-Rachel_Chandra" menjadi "(X5) RACHEL CHANDRA" secara otomatis
+                # Mengubah nama berkas menjadi teks rapi (Kapital + Spasi)
                 clean_name = file_name_decoded.replace('-', ' ').replace('_', ' ').upper()
                 
                 with cols[idx % 3]: 
