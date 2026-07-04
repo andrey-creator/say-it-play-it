@@ -77,15 +77,19 @@ st.markdown("""
         margin-bottom: 30px;
     }
 
-    div.stButton > button {
+    div.stButton > button, div.stLinkButton > a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         transition: all 0.3s ease;
         border: 1px solid #00f2ff !important;
         background-color: transparent;
-        color: white;
+        color: white !important;
         font-family: 'Orbitron', sans-serif;
         border-radius: 10px;
+        text-decoration: none;
     }
-    div.stButton > button:hover {
+    div.stButton > button:hover, div.stLinkButton > a:hover {
         box-shadow: 0 0 15px #00f2ff !important;
         transform: translateY(-2px);
         background-color: #00f2ff !important;
@@ -204,10 +208,7 @@ elif st.session_state.menu_pilihan == 'Galeri':
                     st.session_state.angkatan_pilihan = DAFTAR_BATCH[0]
                     st.rerun()
             with g2:
-                if st.button("👥\n\nINTEGRAL MEMBER", use_container_width=True):
-                    st.session_state.sub_menu_galeri = "integral-member"
-                    st.session_state.angkatan_pilihan = DAFTAR_BATCH[0]
-                    st.rerun()
+                st.link_button("👥\n\nINTEGRAL MEMBER", "https://ec-member-gallery-sman1depok.streamlit.app/", use_container_width=True)
                     
     else:
         c_back, _, c_select = st.columns([2, 1, 2])
