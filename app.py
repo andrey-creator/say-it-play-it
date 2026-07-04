@@ -199,13 +199,13 @@ elif st.session_state.menu_pilihan == 'Galeri':
         with col_galeri:
             g1, g2 = st.columns(2)
             with g1:
-                if st.button("👥\n\nINTEGRAL MEMBER", use_container_width=True):
-                    st.session_state.sub_menu_galeri = "integral-member"
+                if st.button("📸\n\nACTIVITY", use_container_width=True):
+                    st.session_state.sub_menu_galeri = "activity"
                     st.session_state.angkatan_pilihan = DAFTAR_BATCH[0]
                     st.rerun()
             with g2:
-                if st.button("📸\n\nACTIVITY", use_container_width=True):
-                    st.session_state.sub_menu_galeri = "activity"
+                if st.button("👥\n\nINTEGRAL MEMBER", use_container_width=True):
+                    st.session_state.sub_menu_galeri = "integral-member"
                     st.session_state.angkatan_pilihan = DAFTAR_BATCH[0]
                     st.rerun()
                     
