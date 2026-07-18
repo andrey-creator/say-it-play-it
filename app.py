@@ -6,11 +6,11 @@ DAFTAR_BATCH = ["batch-2025-2026", "batch-2026-2027"]
 
 DATA_DEMO_EKSKUL = {
     "batch-2025-2026": [
-        {"judul": "Teaser Demo Ekskul EC 2026", "url": "https://youtu.be/G0S84LEE1qQ"},
+        {"judul": "English Club Demo Day 2026", "url": "https://youtu.be/G0S84LEE1qQ"},
     ],
     "batch-2026-2027": [
-        {"judul": "Grand Opening Demo 2027", "url": "-"},
-        {"judul": "Virtual Booth English Club", "url": "-"},
+        {"judul": "-", "url": "-"},
+        {"judul": "-", "url": "-"},
     ]
 }
 
