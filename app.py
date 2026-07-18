@@ -4,6 +4,16 @@ from urllib.parse import unquote
 
 DAFTAR_BATCH = ["batch-2025-2026", "batch-2026-2027"]
 
+DATA_DEMO_EKSKUL = {
+    "batch-2025-2026": [
+        {"judul": "Teaser Demo Ekskul EC 2026", "url": "https://youtu.be/G0S84LEE1qQ"},
+    ],
+    "batch-2026-2027": [
+        {"judul": "Grand Opening Demo 2027", "url": "-"},
+        {"judul": "Virtual Booth English Club", "url": "-"},
+    ]
+}
+
 st.set_page_config(
     page_title="English Club SMAN 1 Depok", 
     page_icon="🎙️", 
@@ -30,8 +40,6 @@ def get_photos_from_github(folder_path):
     
     try:
         response = requests.get(url, headers=headers, timeout=10)
-        print(f"[DEBUG LOCALHOST] URL: {url} | STATUS CODE: {response.status_code}")
-        
         if response.status_code == 200:
             files = response.json()
             if isinstance(files, list):
@@ -43,19 +51,21 @@ def get_photos_from_github(folder_path):
                 return image_urls
         else:
             st.sidebar.error(f"GitHub API Error: {response.status_code}")
-            if response.status_code == 404:
-                st.sidebar.info(f"Tips: Pastikan di GitHub sudah ada folder 'photos/{folder_path}' dan berisi minimal 1 foto.")
     except Exception:
         return []
     return []
 
+# Inisialisasi session state
 if 'menu_pilihan' not in st.session_state:
     st.session_state.menu_pilihan = 'Home'
 if 'sub_menu_galeri' not in st.session_state:
     st.session_state.sub_menu_galeri = None
 if 'angkatan_pilihan' not in st.session_state:
     st.session_state.angkatan_pilihan = DAFTAR_BATCH[0]
+if 'angkatan_demo' not in st.session_state:
+    st.session_state.angkatan_demo = DAFTAR_BATCH[0]
 
+# Styling CSS
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap');
@@ -106,6 +116,15 @@ st.markdown("""
         letter-spacing: 1px;
         font-weight: 500;
     }
+    
+    .demo-card {
+        padding: 20px; 
+        border: 1px solid rgba(0, 242, 255, 0.3); 
+        border-radius: 10px; 
+        background: rgba(0, 242, 255, 0.02);
+        margin-bottom: 15px;
+        text-align: center;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -127,9 +146,11 @@ st.markdown(f"""
     </div>
     """, unsafe_allow_html=True)
 
+# ==================== MENU HOME ====================
 if st.session_state.menu_pilihan == 'Home':
     _, col_center, _ = st.columns([1, 2, 1])
     with col_center:
+        # Baris Pertama: Galeri & Request
         c1, c2 = st.columns(2)
         with c1:
             if st.button("🖼️\n\nGALERI EC", key="btn_galeri", use_container_width=True):
@@ -140,6 +161,7 @@ if st.session_state.menu_pilihan == 'Home':
                 set_page('Request')
                 st.rerun()
         
+        # Baris Kedua: Queue & Feedback
         c3, c4 = st.columns(2)
         with c3:
             if st.button("📜\n\nQUEUE", key="btn_queue", use_container_width=True):
@@ -150,6 +172,11 @@ if st.session_state.menu_pilihan == 'Home':
                 set_page('Feedback')
                 st.rerun()
 
+        # Baris Ketiga: Fitur Baru (Demo Ekskul)
+        if st.button("🚀\n\nDEMO EKSKUL", key="btn_demo", use_container_width=True):
+            set_page('Demo')
+            st.rerun()
+
         st.markdown("""
             <div style="text-align: center; margin-top: 40px; padding: 20px; border-top: 1px solid rgba(0, 242, 255, 0.2);">
                 <p style="font-family: 'Rajdhani', sans-serif; color: #00f2ff; letter-spacing: 2px; font-size: 1.1rem; font-weight: 500; font-style: italic;">
@@ -158,6 +185,7 @@ if st.session_state.menu_pilihan == 'Home':
             </div>
         """, unsafe_allow_html=True)
 
+# ==================== MENU REQUEST / FEEDBACK ====================
 elif st.session_state.menu_pilihan in ['Request', 'Feedback']:
     _, cb, _ = st.columns([2, 1, 2])
     with cb: 
@@ -189,6 +217,7 @@ elif st.session_state.menu_pilihan in ['Request', 'Feedback']:
         st.write("##")
         st.link_button(btn_label, form_url, use_container_width=True)
 
+# ==================== MENU GALERI ====================
 elif st.session_state.menu_pilihan == 'Galeri':
     _, cb, _ = st.columns([2, 1, 2])
     with cb: 
@@ -245,6 +274,47 @@ elif st.session_state.menu_pilihan == 'Galeri':
         else:
             st.warning("No files found in this category.")
 
+# ==================== MENU BARU: DEMO EKSKUL ====================
+elif st.session_state.menu_pilihan == 'Demo':
+    _, cb, _ = st.columns([2, 1, 2])
+    with cb: 
+        if st.button("⬅️ DASHBOARD"): 
+            set_page('Home')
+            st.rerun()
+            
+    st.markdown("<h2 style='text-align:center; color:#00f2ff; font-family:Orbitron; margin-bottom:20px;'>DEMO EKSKUL</h2>", unsafe_allow_html=True)
+    
+    # Pilih Tahun / Batch
+    _, c_select_demo, _ = st.columns([2, 1, 2])
+    with c_select_demo:
+        angkatan_demo = st.selectbox(
+            "SELECT DEMO BATCH",
+            DAFTAR_BATCH, 
+            index=DAFTAR_BATCH.index(st.session_state.angkatan_demo) if st.session_state.angkatan_demo in DAFTAR_BATCH else 0,
+            label_visibility="visible"
+        )
+        st.session_state.angkatan_demo = angkatan_demo
+
+    st.write("##")
+    
+    # Menampilkan daftar link berdasarkan tahun yang dipilih
+    _, col_demo_content, _ = st.columns([1, 2, 1])
+    with col_demo_content:
+        list_link = DATA_DEMO_EKSKUL.get(st.session_state.angkatan_demo, [])
+        
+        if list_link:
+            for item in list_link:
+                st.markdown(f"""
+                    <div class="demo-card">
+                        <h4 style="font-family: 'Rajdhani'; color: white; margin-bottom: 15px; letter-spacing: 1px;">{item['judul'].upper()}</h4>
+                    </div>
+                """, unsafe_allow_html=True)
+                st.link_button("🔗 VISIT LINK", item['url'], use_container_width=True)
+                st.write("") # Spacing
+        else:
+            st.warning("No demo links found for this batch.")
+
+# Sidebar & Footer tetap sama...
 with st.sidebar:
     st.markdown("<p style='font-family:Orbitron; color:#00f2ff; font-size:0.7rem;'>CONTROL STATION</p>", unsafe_allow_html=True)
     if st.button("REBOOT"): 
