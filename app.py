@@ -21,8 +21,8 @@ GALERI_PER_PAGE = 12
 
 # TODO: ganti nama & tanggal (format ISO, WIB) sesuai event berikutnya
 EVENT_BERIKUTNYA = {
-    "nama": "DEMO DAY BERIKUTNYA",
-    "tanggal": "2026-09-05T09:00:00",
+    "nama": "Upcoming Broadcast",
+    "tanggal": "2026-07-22T12:00:00",
 }
 
 # TODO: isi data pengurus inti English Club di sini
@@ -401,7 +401,7 @@ if st.session_state.menu_pilihan == 'Home':
         c1, c2 = st.columns(2)
         with c1:
             st.markdown(render_icon(ICON_GALERI), unsafe_allow_html=True)
-            if st.button("GALERI EC", key="btn_galeri", use_container_width=True):
+            if st.button("EC GALLERY", key="btn_galeri", use_container_width=True):
                 set_page('Galeri')
                 st.rerun()
         with c2:
@@ -430,7 +430,7 @@ if st.session_state.menu_pilihan == 'Home':
                 st.rerun()
         with c6:
             st.markdown(render_icon(ICON_USERS), unsafe_allow_html=True)
-            if st.button("TENTANG KAMI", key="btn_tentang", use_container_width=True):
+            if st.button("ABOUT US", key="btn_tentang", use_container_width=True):
                 set_page('Tentang')
                 st.rerun()
 
@@ -632,7 +632,7 @@ elif st.session_state.menu_pilihan == 'Tentang':
             st.rerun()
 
     st.markdown(render_icon(ICON_USERS, margin_bottom=10), unsafe_allow_html=True)
-    st.markdown("<h2 style='text-align:center; color:#00f2ff; font-family:Orbitron; margin-bottom:10px;'>TENTANG KAMI</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align:center; color:#00f2ff; font-family:Orbitron; margin-bottom:10px;'>ABOUT US</h2>", unsafe_allow_html=True)
     st.markdown("""
         <p style="text-align:center; font-family:'Rajdhani'; color:white; font-size:1rem; max-width:600px; margin:0 auto 30px auto;">
             English Club SMAN 1 Depok adalah ekstrakurikuler tempat siswa mengasah kemampuan berbahasa Inggris lewat diskusi, presentasi, dan berbagai kegiatan seru lainnya.
