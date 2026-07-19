@@ -152,7 +152,7 @@ def get_photos_from_github(folder_path):
     return []
 
 
-@st.cache_data(ttl=300)
+@st.cache_data(ttl=3600)
 def get_demo_data_from_sheet():
     csv_url = st.secrets.get("DEMO_SHEET_CSV_URL")
     if not csv_url:
@@ -161,7 +161,7 @@ def get_demo_data_from_sheet():
     try:
         response = requests.get(csv_url, timeout=10)
         if response.status_code != 200:
-            st.sidebar.warning("Gagal ambil data demo dari Sheet, pakai data cadangan.", icon=":material/warning:")
+            st.toast("Gagal ambil data demo dari Sheet, pakai data cadangan.", icon=":material/warning:")
             return DATA_DEMO_EKSKUL_FALLBACK
 
         reader = csv.DictReader(io.StringIO(response.text))
@@ -178,10 +178,10 @@ def get_demo_data_from_sheet():
         return data
 
     except requests.exceptions.RequestException:
-        st.sidebar.warning("Gagal konek ke Google Sheet, pakai data cadangan.", icon=":material/warning:")
+        st.toast("Gagal konek ke Google Sheet, pakai data cadangan.", icon=":material/warning:")
         return DATA_DEMO_EKSKUL_FALLBACK
     except Exception:
-        st.sidebar.warning("Format data demo di Sheet tidak sesuai, pakai data cadangan.", icon=":material/warning:")
+        st.toast("Format data demo di Sheet tidak sesuai, pakai data cadangan.", icon=":material/warning:")
         return DATA_DEMO_EKSKUL_FALLBACK
 
 
@@ -237,7 +237,7 @@ def get_event_from_sheet():
         return EVENT_BERIKUTNYA_FALLBACK
 
 
-@st.cache_data(ttl=300)
+@st.cache_data(ttl=3600)
 def get_pengurus_from_sheet():
     """
     Ambil data pengurus dari Google Sheet (kolom: nama, jabatan, urutan[opsional]).
@@ -250,7 +250,7 @@ def get_pengurus_from_sheet():
     try:
         response = requests.get(csv_url, timeout=10)
         if response.status_code != 200:
-            st.sidebar.warning("Gagal ambil data pengurus dari Sheet, pakai data cadangan.", icon=":material/warning:")
+            st.toast("Gagal ambil data pengurus dari Sheet, pakai data cadangan.", icon=":material/warning:")
             return DATA_PENGURUS_FALLBACK
 
         # Buang BOM (kalau ada) biar header pertama nggak ketuker jadi '\ufeffnama'
@@ -285,10 +285,10 @@ def get_pengurus_from_sheet():
         return [{"nama": d["nama"], "jabatan": d["jabatan"]} for d in data]
 
     except requests.exceptions.RequestException:
-        st.sidebar.warning("Gagal konek ke Google Sheet (pengurus), pakai data cadangan.", icon=":material/warning:")
+        st.toast("Gagal konek ke Google Sheet (pengurus), pakai data cadangan.", icon=":material/warning:")
         return DATA_PENGURUS_FALLBACK
     except Exception:
-        st.sidebar.warning("Format data pengurus di Sheet tidak sesuai, pakai data cadangan.", icon=":material/warning:")
+        st.toast("Format data pengurus di Sheet tidak sesuai, pakai data cadangan.", icon=":material/warning:")
         return DATA_PENGURUS_FALLBACK
 
 
@@ -298,20 +298,57 @@ def tampilkan_lightbox(img_url, caption):
     if caption:
         st.markdown(f'<p class="img-label">{caption}</p>', unsafe_allow_html=True)
 
-    try:
-        img_bytes = requests.get(img_url, timeout=10).content
-        file_ext = img_url.split('/')[-1].rsplit('.', 1)[-1] if '.' in img_url.split('/')[-1] else 'jpg'
-        file_name = (caption or "foto").replace(' ', '_').lower() + f".{file_ext}"
-        st.markdown(render_icon(ICON_DOWNLOAD, margin_bottom=2), unsafe_allow_html=True)
-        st.download_button(
-            "Download Foto",
-            data=img_bytes,
-            file_name=file_name,
-            mime=f"image/{file_ext}",
-            use_container_width=True
-        )
-    except requests.exceptions.RequestException:
-        st.warning("Gagal menyiapkan file untuk didownload.", icon=":material/warning:")
+    col_dl, col_share = st.columns(2)
+
+    with col_dl:
+        try:
+            img_bytes = requests.get(img_url, timeout=10).content
+            file_ext = img_url.split('/')[-1].rsplit('.', 1)[-1] if '.' in img_url.split('/')[-1] else 'jpg'
+            file_name = (caption or "foto").replace(' ', '_').lower() + f".{file_ext}"
+            st.markdown(render_icon(ICON_DOWNLOAD, margin_bottom=2), unsafe_allow_html=True)
+            downloaded = st.download_button(
+                "Download Foto",
+                data=img_bytes,
+                file_name=file_name,
+                mime=f"image/{file_ext}",
+                use_container_width=True
+            )
+            if downloaded:
+                st.toast("Foto berhasil didownload!", icon=":material/check_circle:")
+        except requests.exceptions.RequestException:
+            st.warning("Gagal menyiapkan file untuk didownload.", icon=":material/warning:")
+
+    with col_share:
+        st.markdown(render_icon(ICON_EKSTERNAL, margin_bottom=2), unsafe_allow_html=True)
+        share_html = f"""
+        <button id="share-btn" style="
+            width:100%; padding:0.65rem 1rem; border-radius:10px;
+            border:1px solid #00f2ff; background:transparent; color:white;
+            font-family:'Orbitron', sans-serif; font-size:0.85rem; cursor:pointer;
+        ">SHARE FOTO</button>
+        <script>
+        const btn = document.getElementById('share-btn');
+        btn.addEventListener('click', async () => {{
+            const shareData = {{
+                title: 'English Club SMAN 1 Depok',
+                text: '{(caption or "Foto").replace("'", "")} - English Club SMAN 1 Depok',
+                url: '{img_url}'
+            }};
+            try {{
+                if (navigator.share) {{
+                    await navigator.share(shareData);
+                }} else {{
+                    await navigator.clipboard.writeText('{img_url}');
+                    btn.innerText = 'LINK TERSALIN!';
+                    setTimeout(() => btn.innerText = 'SHARE FOTO', 1500);
+                }}
+            }} catch (err) {{
+                console.log('Share dibatalkan atau gagal', err);
+            }}
+        }});
+        </script>
+        """
+        components.html(share_html, height=50)
 
 
 if 'menu_pilihan' not in st.session_state:
@@ -543,6 +580,18 @@ if st.session_state.menu_pilihan == 'Home':
 
         # Countdown ke event berikutnya (live, update tiap detik)
         event_berikutnya = get_event_from_sheet()
+
+        # Format tanggal jadi lebih ramah dibaca, misal "5 September 2026, 09:00"
+        NAMA_BULAN = [
+            "", "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+            "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+        ]
+        try:
+            dt_event = datetime.fromisoformat(event_berikutnya['tanggal'])
+            tanggal_ramah = f"{dt_event.day} {NAMA_BULAN[dt_event.month]} {dt_event.year}, {dt_event.strftime('%H:%M')}"
+        except (ValueError, IndexError):
+            tanggal_ramah = event_berikutnya['tanggal']
+
         countdown_html = f"""
         <div style="font-family:'Orbitron', sans-serif; text-align:center; padding:16px;
                     border:1px solid rgba(0, 242, 255, 0.35); border-radius:12px;
@@ -551,6 +600,9 @@ if st.session_state.menu_pilihan == 'Home':
             {event_berikutnya['nama']}
           </div>
           <div id="cd-timer" style="font-size:1.5rem; font-weight:700; letter-spacing:1px;">--H : --J : --M : --D</div>
+          <div style="font-family:'Rajdhani', sans-serif; font-size:0.8rem; letter-spacing:1px; color:#aaaaaa; margin-top:8px;">
+            {tanggal_ramah}
+          </div>
         </div>
         <script>
           const target = new Date("{event_berikutnya['tanggal']}").getTime();
@@ -570,7 +622,7 @@ if st.session_state.menu_pilihan == 'Home':
           tick();
         </script>
         """
-        st.iframe(countdown_html, height=130)
+        st.iframe(countdown_html, height=155)
 
         c1, c2 = st.columns(2)
         with c1:
@@ -711,13 +763,25 @@ elif st.session_state.menu_pilihan == 'Galeri':
             end = start + GALERI_PER_PAGE
             images_page = images[start:end]
 
+            JUMLAH_BADGE_BARU = 3  # sejumlah foto paling baru yang ditandai (hanya di halaman pertama)
+
             cols = st.columns(3)
             for idx, img_url in enumerate(images_page):
                 file_name_encoded = img_url.split('/')[-1].rsplit('.', 1)[0]
                 file_name_decoded = unquote(file_name_encoded)
                 clean_name = file_name_decoded.replace('-', ' ').replace('_', ' ').upper()
+                foto_baru = st.session_state.galeri_page == 0 and idx < JUMLAH_BADGE_BARU
 
                 with cols[idx % 3]:
+                    if foto_baru:
+                        st.markdown("""
+                            <div style="
+                                display:inline-block; background:#00f2ff; color:black;
+                                font-family:'Orbitron', sans-serif; font-size:0.65rem;
+                                font-weight:700; letter-spacing:1px; padding:3px 10px;
+                                border-radius:6px; margin-bottom:6px;
+                            ">BARU</div>
+                        """, unsafe_allow_html=True)
                     st.image(img_url, use_container_width=True, caption=clean_name)
                     st.markdown(render_icon(ICON_SEARCH, margin_bottom=2), unsafe_allow_html=True)
                     if st.button("Zoom", key=f"lightbox_{start + idx}_{path_pencarian}", use_container_width=True):
@@ -815,6 +879,31 @@ elif st.session_state.menu_pilihan == 'Tentang':
     _, col_pengurus, _ = st.columns([1, 2, 1])
     with col_pengurus:
         data_pengurus = get_pengurus_from_sheet()
+
+        # Statistik ringan: dihitung dari data yang sudah di-cache, tanpa request tambahan
+        total_pengurus_terisi = sum(1 for o in data_pengurus if o['nama'] != "-")
+        total_foto_semua_batch = sum(
+            len(get_photos_from_github(f"activity/{batch}")) for batch in DAFTAR_BATCH
+        )
+
+        s1, s2 = st.columns(2)
+        with s1:
+            st.markdown(f"""
+                <div class="demo-card">
+                    <h4 style="font-family:'Rajdhani'; color:#00f2ff; margin-bottom:6px; letter-spacing:1px; font-size:0.8rem;">TOTAL FOTO GALERI</h4>
+                    <p style="font-family:'Orbitron'; color:white; font-size:1.6rem; margin:0; font-weight:700;">{total_foto_semua_batch}</p>
+                </div>
+            """, unsafe_allow_html=True)
+        with s2:
+            st.markdown(f"""
+                <div class="demo-card">
+                    <h4 style="font-family:'Rajdhani'; color:#00f2ff; margin-bottom:6px; letter-spacing:1px; font-size:0.8rem;">PENGURUS TERISI</h4>
+                    <p style="font-family:'Orbitron'; color:white; font-size:1.6rem; margin:0; font-weight:700;">{total_pengurus_terisi}/{len(data_pengurus)}</p>
+                </div>
+            """, unsafe_allow_html=True)
+
+        st.write("##")
+
         p_cols = st.columns(2)
         for idx, orang in enumerate(data_pengurus):
             nama_tampil = orang['nama'] if orang['nama'] != "-" else "Unfilled"
