@@ -48,6 +48,7 @@ ICON_KAMERA = '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" strok
 ICON_SEARCH = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>'
 ICON_DOWNLOAD = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>'
 ICON_EKSTERNAL = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>'
+ICON_MOON = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>'
 
 def render_icon(svg, color="#00f2ff", margin_bottom=8):
     return f'<div style="display:flex;justify-content:center;color:{color};margin-bottom:{margin_bottom}px;">{svg}</div>'
@@ -289,7 +290,8 @@ def get_pengurus_from_sheet():
     except Exception:
         st.sidebar.warning("Format data pengurus di Sheet tidak sesuai, pakai data cadangan.", icon=":material/warning:")
         return DATA_PENGURUS_FALLBACK
-    
+
+
 @st.dialog("Preview Foto", width="large")
 def tampilkan_lightbox(img_url, caption):
     st.image(img_url, use_container_width=True)
@@ -322,6 +324,8 @@ if 'angkatan_demo' not in st.session_state:
     st.session_state.angkatan_demo = DAFTAR_BATCH[0]
 if 'galeri_page' not in st.session_state:
     st.session_state.galeri_page = 0
+if 'simple_mode' not in st.session_state:
+    st.session_state.simple_mode = False
 
 # ==================== MODE KIOSK (TV / MADING) ====================
 # Akses lewat URL: <alamat-dashboard>?kiosk=1
@@ -373,7 +377,7 @@ if st.query_params.get("kiosk") == "1":
     st.iframe(kiosk_html, height=900)
     st.stop()
 
-# Styling CSS
+# Styling CSS (mode neon/default)
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap');
@@ -456,6 +460,53 @@ st.markdown("""
         padding-top: 8px;
     }
     </style>
+    """, unsafe_allow_html=True)
+
+# ==================== SIMPLE MODE (matikan efek berat) ====================
+if st.session_state.simple_mode:
+    st.markdown("""
+        <style>
+        /* ===== SIMPLE MODE: matikan glow, shadow, animasi berat ===== */
+        .glow-text {
+            text-shadow: none !important;
+            color: #eeeeee !important;
+        }
+        .sub-text, .img-label, .page-indicator {
+            color: #999999 !important;
+            text-shadow: none !important;
+        }
+        .logo-img {
+            filter: none !important;
+        }
+        div.stButton > button, div.stLinkButton > a, div.stDownloadButton > button {
+            border: 1px solid #666666 !important;
+            color: #eeeeee !important;
+            transition: none !important;
+        }
+        div.stButton > button:hover, div.stLinkButton > a:hover, div.stDownloadButton > button:hover {
+            box-shadow: none !important;
+            background-color: #333333 !important;
+            color: #eeeeee !important;
+            transform: none !important;
+        }
+        .demo-card {
+            border: 1px solid #444444 !important;
+            background: #1a1a1a !important;
+        }
+        .demo-card h4 {
+            color: #cccccc !important;
+        }
+        .skeleton-box {
+            animation: none !important;
+            background: #222222 !important;
+        }
+        div[style*="text-shadow"] {
+            text-shadow: none !important;
+        }
+        div[style*="backdrop-filter"] {
+            backdrop-filter: none !important;
+        }
+        </style>
     """, unsafe_allow_html=True)
 
 
@@ -781,6 +832,15 @@ with st.sidebar:
     if st.button("REBOOT"):
         set_page('Home')
         st.rerun()
+
+    st.markdown("---")
+    st.markdown(render_icon(ICON_MOON, margin_bottom=4), unsafe_allow_html=True)
+    simple_mode = st.toggle("Simple Mode (hemat performa)", value=st.session_state.simple_mode)
+    if simple_mode != st.session_state.simple_mode:
+        st.session_state.simple_mode = simple_mode
+        st.rerun()
+    st.caption("Matikan efek glow & animasi neon buat device/TV yang lebih ringan.")
+
     st.markdown("---")
     st.markdown(render_icon(ICON_TV, margin_bottom=4), unsafe_allow_html=True)
     st.link_button("MODE KIOSK (TV)", "?kiosk=1", use_container_width=True)
