@@ -278,6 +278,7 @@ def get_pengurus_from_sheet():
     except Exception:
         st.sidebar.warning("Format data pengurus di Sheet tidak sesuai, pakai data cadangan.", icon=":material/warning:")
         return DATA_PENGURUS_FALLBACK
+@st.dialog("Preview Foto", width="large")
 def tampilkan_lightbox(img_url, caption):
     st.image(img_url, use_container_width=True)
     if caption:
