@@ -890,14 +890,14 @@ elif st.session_state.menu_pilihan == 'Tentang':
         with s1:
             st.markdown(f"""
                 <div class="demo-card">
-                    <h4 style="font-family:'Rajdhani'; color:#00f2ff; margin-bottom:6px; letter-spacing:1px; font-size:0.8rem;">TOTAL FOTO GALERI</h4>
+                    <h4 style="font-family:'Rajdhani'; color:#00f2ff; margin-bottom:6px; letter-spacing:1px; font-size:0.8rem;">TOTAL PHOTOS</h4>
                     <p style="font-family:'Orbitron'; color:white; font-size:1.6rem; margin:0; font-weight:700;">{total_foto_semua_batch}</p>
                 </div>
             """, unsafe_allow_html=True)
         with s2:
             st.markdown(f"""
                 <div class="demo-card">
-                    <h4 style="font-family:'Rajdhani'; color:#00f2ff; margin-bottom:6px; letter-spacing:1px; font-size:0.8rem;">PENGURUS TERISI</h4>
+                    <h4 style="font-family:'Rajdhani'; color:#00f2ff; margin-bottom:6px; letter-spacing:1px; font-size:0.8rem;">COMMITTEE POSITIONS FILLED</h4>
                     <p style="font-family:'Orbitron'; color:white; font-size:1.6rem; margin:0; font-weight:700;">{total_pengurus_terisi}/{len(data_pengurus)}</p>
                 </div>
             """, unsafe_allow_html=True)
