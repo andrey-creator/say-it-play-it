@@ -763,7 +763,6 @@ elif st.session_state.menu_pilihan == 'Galeri':
             end = start + GALERI_PER_PAGE
             images_page = images[start:end]
 
-
             cols = st.columns(3)
             for idx, img_url in enumerate(images_page):
                 file_name_encoded = img_url.split('/')[-1].rsplit('.', 1)[0]
@@ -771,15 +770,6 @@ elif st.session_state.menu_pilihan == 'Galeri':
                 clean_name = file_name_decoded.replace('-', ' ').replace('_', ' ').upper()
 
                 with cols[idx % 3]:
-                    if foto_baru:
-                        st.markdown("""
-                            <div style="
-                                display:inline-block; background:#00f2ff; color:black;
-                                font-family:'Orbitron', sans-serif; font-size:0.65rem;
-                                font-weight:700; letter-spacing:1px; padding:3px 10px;
-                                border-radius:6px; margin-bottom:6px;
-                            ">BARU</div>
-                        """, unsafe_allow_html=True)
                     st.image(img_url, use_container_width=True, caption=clean_name)
                     st.markdown(render_icon(ICON_SEARCH, margin_bottom=2), unsafe_allow_html=True)
                     if st.button("Zoom", key=f"lightbox_{start + idx}_{path_pencarian}", use_container_width=True):
