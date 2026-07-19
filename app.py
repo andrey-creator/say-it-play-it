@@ -540,7 +540,7 @@ if st.session_state.menu_pilihan == 'Home':
                 st.rerun()
         with c6:
             st.markdown(render_icon(ICON_USERS), unsafe_allow_html=True)
-            if st.button("TENTANG KAMI", key="btn_tentang", use_container_width=True):
+            if st.button("ABOUT US", key="btn_tentang", use_container_width=True):
                 set_page('Tentang')
                 st.rerun()
 
@@ -741,7 +741,7 @@ elif st.session_state.menu_pilihan == 'Tentang':
         tombol_dashboard()
 
     st.markdown(render_icon(ICON_USERS, margin_bottom=10), unsafe_allow_html=True)
-    st.markdown("<h2 style='text-align:center; color:#00f2ff; font-family:Orbitron; margin-bottom:10px;'>TENTANG KAMI</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align:center; color:#00f2ff; font-family:Orbitron; margin-bottom:10px;'>ABOUT US</h2>", unsafe_allow_html=True)
     st.markdown("""
         <p style="text-align:center; font-family:'Rajdhani'; color:white; font-size:1rem; max-width:600px; margin:0 auto 30px auto;">
             English Club SMAN 1 Depok adalah ekstrakurikuler tempat siswa mengasah kemampuan berbahasa Inggris lewat diskusi, presentasi, dan berbagai kegiatan seru lainnya.
@@ -753,7 +753,7 @@ elif st.session_state.menu_pilihan == 'Tentang':
         data_pengurus = get_pengurus_from_sheet()
         p_cols = st.columns(2)
         for idx, orang in enumerate(data_pengurus):
-            nama_tampil = orang['nama'] if orang['nama'] != "-" else "Belum diisi"
+            nama_tampil = orang['nama'] if orang['nama'] != "-" else "Unfilled"
             with p_cols[idx % 2]:
                 st.markdown(f"""
                     <div class="demo-card">
