@@ -14,6 +14,28 @@ DATA_DEMO_EKSKUL = {
     ]
 }
 
+# ==================== KONFIGURASI TEMA ====================
+TEMA = {
+    "dark": {
+        "bg": "#05070a",
+        "text": "#ffffff",
+        "accent": "#00f2ff",
+        "accent_rgb": "0, 242, 255",
+        "footer_bg": "rgba(5, 7, 10, 0.9)",
+        "logo_filter": "invert(1) drop-shadow(0 0 12px #00f2ff)",
+        "widget_bg": "#0d1117",
+    },
+    "light": {
+        "bg": "#f4ecd9",
+        "text": "#2b241c",
+        "accent": "#a8571b",
+        "accent_rgb": "168, 87, 27",
+        "footer_bg": "rgba(244, 236, 217, 0.92)",
+        "logo_filter": "drop-shadow(0 0 8px rgba(168, 87, 27, 0.35))",
+        "widget_bg": "#fffdf7",
+    },
+}
+
 st.set_page_config(
     page_title="English Club SMAN 1 Depok", 
     page_icon="🎙️", 
@@ -65,7 +87,7 @@ def tampilkan_lightbox(img_url, caption):
     if caption:
         st.markdown(f'<p class="img-label">{caption}</p>', unsafe_allow_html=True)
 
-
+# Inisialisasi session state
 if 'menu_pilihan' not in st.session_state:
     st.session_state.menu_pilihan = 'Home'
 if 'sub_menu_galeri' not in st.session_state:
@@ -74,93 +96,119 @@ if 'angkatan_pilihan' not in st.session_state:
     st.session_state.angkatan_pilihan = DAFTAR_BATCH[0]
 if 'angkatan_demo' not in st.session_state:
     st.session_state.angkatan_demo = DAFTAR_BATCH[0]
+if 'theme' not in st.session_state:
+    st.session_state.theme = 'dark'
 
-# Styling CSS
-st.markdown("""
+T = TEMA[st.session_state.theme]
+
+def set_page(name):
+    st.session_state.menu_pilihan = name
+    st.session_state.sub_menu_galeri = None
+
+# Styling CSS (dinamis sesuai tema aktif)
+st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap');
-    
-    .header-container { text-align: center; padding: 20px 0; }
-    .logo-img { width: 100px; filter: invert(1) drop-shadow(0 0 12px #00f2ff); border-radius: 50%; }
-    .glow-text {
+
+    .stApp {{
+        background-color: {T['bg']};
+        color: {T['text']};
+    }}
+
+    /* Sedikit rapikan widget bawaan Streamlit (selectbox, expander, dsb) biar konsisten sama tema */
+    [data-testid="stSelectbox"] div[data-baseweb="select"] > div,
+    [data-testid="stTextInput"] input,
+    [data-testid="stExpander"] {{
+        background-color: {T['widget_bg']} !important;
+        color: {T['text']} !important;
+        border-color: rgba({T['accent_rgb']}, 0.3) !important;
+    }}
+
+    .header-container {{ text-align: center; padding: 20px 0; }}
+    .logo-img {{ width: 100px; filter: {T['logo_filter']}; border-radius: 50%; }}
+    .glow-text {{
         font-family: 'Orbitron', sans-serif;
-        color: white;
-        text-shadow: 0 0 10px #00f2ff;
+        color: {T['text']};
+        text-shadow: 0 0 10px {T['accent']};
         font-size: 2.5rem;
         margin: 10px 0 0 0;
-    }
-    .sub-text {
+    }}
+    .sub-text {{
         font-family: 'Rajdhani', sans-serif;
-        color: #00f2ff;
+        color: {T['accent']};
         letter-spacing: 4px;
         font-size: 1rem;
         margin-bottom: 30px;
-    }
+    }}
 
-    div.stButton > button, div.stLinkButton > a {
+    div.stButton > button, div.stLinkButton > a {{
         display: inline-flex;
         align-items: center;
         justify-content: center;
         transition: all 0.3s ease;
-        border: 1px solid #00f2ff !important;
+        border: 1px solid {T['accent']} !important;
         background-color: transparent;
-        color: white !important;
+        color: {T['text']} !important;
         font-family: 'Orbitron', sans-serif;
         border-radius: 10px;
         text-decoration: none;
-    }
-    div.stButton > button:hover, div.stLinkButton > a:hover {
-        box-shadow: 0 0 15px #00f2ff !important;
+    }}
+    div.stButton > button:hover, div.stLinkButton > a:hover {{
+        box-shadow: 0 0 15px {T['accent']} !important;
         transform: translateY(-2px);
-        background-color: #00f2ff !important;
-        color: black !important;
-    }
+        background-color: {T['accent']} !important;
+        color: {T['bg']} !important;
+    }}
 
-    .img-label {
+    .img-label {{
         text-align: center; 
         font-family: 'Rajdhani', sans-serif; 
-        color: #00f2ff; 
+        color: {T['accent']}; 
         font-size: 0.85rem; 
         margin-top: -10px; 
         margin-bottom: 25px;
         letter-spacing: 1px;
         font-weight: 500;
-    }
+    }}
     
-    .demo-card {
+    .demo-card {{
         padding: 20px; 
-        border: 1px solid rgba(0, 242, 255, 0.3); 
+        border: 1px solid rgba({T['accent_rgb']}, 0.3); 
         border-radius: 10px; 
-        background: rgba(0, 242, 255, 0.02);
+        background: rgba({T['accent_rgb']}, 0.05);
         margin-bottom: 15px;
         text-align: center;
-    }
+    }}
 
-    .skeleton-box {
+    .skeleton-box {{
         width: 100%;
         aspect-ratio: 1 / 1;
         border-radius: 10px;
         margin-bottom: 25px;
-        background: linear-gradient(90deg, rgba(0,242,255,0.05) 25%, rgba(0,242,255,0.15) 37%, rgba(0,242,255,0.05) 63%);
+        background: linear-gradient(90deg, rgba({T['accent_rgb']},0.05) 25%, rgba({T['accent_rgb']},0.2) 37%, rgba({T['accent_rgb']},0.05) 63%);
         background-size: 400% 100%;
         animation: shimmer 1.4s ease-in-out infinite;
-    }
-    @keyframes shimmer {
-        0% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
-    }
+    }}
+    @keyframes shimmer {{
+        0% {{ background-position: 100% 50%; }}
+        100% {{ background-position: 0% 50%; }}
+    }}
     </style>
     """, unsafe_allow_html=True)
-
-def set_page(name):
-    st.session_state.menu_pilihan = name
-    st.session_state.sub_menu_galeri = None
 
 if st.session_state.menu_pilihan == 'Home':
     st.markdown(
         "<style>[data-testid='stSidebar'], [data-testid='collapsedControl'], header {display: none; visibility: hidden;}</style>", 
         unsafe_allow_html=True
     )
+
+# Tombol ganti tema (selalu tampil, pojok kanan atas)
+_, col_theme = st.columns([8, 1])
+with col_theme:
+    label_toggle = "☀️" if st.session_state.theme == "dark" else "🌙"
+    if st.button(label_toggle, key="theme_toggle", help="Ganti tema terang/gelap", use_container_width=True):
+        st.session_state.theme = 'light' if st.session_state.theme == 'dark' else 'dark'
+        st.rerun()
 
 st.markdown(f"""
     <div class="header-container">
@@ -201,9 +249,9 @@ if st.session_state.menu_pilihan == 'Home':
             set_page('Demo')
             st.rerun()
 
-        st.markdown("""
-            <div style="text-align: center; margin-top: 40px; padding: 20px; border-top: 1px solid rgba(0, 242, 255, 0.2);">
-                <p style="font-family: 'Rajdhani', sans-serif; color: #00f2ff; letter-spacing: 2px; font-size: 1.1rem; font-weight: 500; font-style: italic;">
+        st.markdown(f"""
+            <div style="text-align: center; margin-top: 40px; padding: 20px; border-top: 1px solid rgba({T['accent_rgb']}, 0.2);">
+                <p style="font-family: 'Rajdhani', sans-serif; color: {T['accent']}; letter-spacing: 2px; font-size: 1.1rem; font-weight: 500; font-style: italic;">
                     "United we stand • Divided we fall • Never be defeated"
                 </p>
             </div>
@@ -232,9 +280,9 @@ elif st.session_state.menu_pilihan in ['Request', 'Feedback']:
     _, col_content, _ = st.columns([1, 2, 1])
     with col_content:
         st.markdown(f"""
-            <div style="text-align: center; padding: 30px; border: 1px solid rgba(0, 242, 255, 0.3); border-radius: 15px; background: rgba(0, 242, 255, 0.05);">
-                <h2 style="font-family: 'Orbitron'; color: #00f2ff; margin-bottom: 20px;">{header_text}</h2>
-                <p style="font-family: 'Rajdhani'; color: white; font-size: 1.1rem; margin-bottom: 30px;">{desc_text}</p>
+            <div style="text-align: center; padding: 30px; border: 1px solid rgba({T['accent_rgb']}, 0.3); border-radius: 15px; background: rgba({T['accent_rgb']}, 0.05);">
+                <h2 style="font-family: 'Orbitron'; color: {T['accent']}; margin-bottom: 20px;">{header_text}</h2>
+                <p style="font-family: 'Rajdhani'; color: {T['text']}; font-size: 1.1rem; margin-bottom: 30px;">{desc_text}</p>
             </div>
         """, unsafe_allow_html=True)
         
@@ -249,7 +297,7 @@ elif st.session_state.menu_pilihan == 'Galeri':
             set_page('Home')
             st.rerun()
     
-    st.markdown("<h2 style='text-align:center; color:#00f2ff; font-family:Orbitron;'>GALERI</h2>", unsafe_allow_html=True)
+    st.markdown(f"<h2 style='text-align:center; color:{T['accent']}; font-family:Orbitron;'>GALERI</h2>", unsafe_allow_html=True)
 
     if st.session_state.sub_menu_galeri is None:
         _, col_galeri, _ = st.columns([1, 2, 1])
@@ -302,7 +350,7 @@ elif st.session_state.menu_pilihan == 'Galeri':
                 
                 with cols[idx % 3]: 
                     st.image(img_url, use_container_width=True, caption=clean_name)
-                    if st.button("🔍 Zoom", key=f"lightbox_{idx}_{path_pencarian}", use_container_width=True):
+                    if st.button("🔍 PERBESAR", key=f"lightbox_{idx}_{path_pencarian}", use_container_width=True):
                         tampilkan_lightbox(img_url, clean_name)
         else:
             st.warning("No files found in this category.")
@@ -315,7 +363,7 @@ elif st.session_state.menu_pilihan == 'Demo':
             set_page('Home')
             st.rerun()
             
-    st.markdown("<h2 style='text-align:center; color:#00f2ff; font-family:Orbitron; margin-bottom:20px;'>DEMO EKSKUL</h2>", unsafe_allow_html=True)
+    st.markdown(f"<h2 style='text-align:center; color:{T['accent']}; font-family:Orbitron; margin-bottom:20px;'>DEMO EKSKUL</h2>", unsafe_allow_html=True)
     
     _, c_select_demo, _ = st.columns([2, 1, 2])
     with c_select_demo:
@@ -329,7 +377,7 @@ elif st.session_state.menu_pilihan == 'Demo':
 
     st.write("##")
     
-
+    # Menampilkan daftar link berdasarkan tahun yang dipilih
     _, col_demo_content, _ = st.columns([1, 2, 1])
     with col_demo_content:
         list_link = DATA_DEMO_EKSKUL.get(st.session_state.angkatan_demo, [])
@@ -341,30 +389,30 @@ elif st.session_state.menu_pilihan == 'Demo':
             for item in item_siap:
                 st.markdown(f"""
                     <div class="demo-card">
-                        <h4 style="font-family: 'Rajdhani'; color: white; margin-bottom: 15px; letter-spacing: 1px;">{item['judul'].upper()}</h4>
+                        <h4 style="font-family: 'Rajdhani'; color: {T['text']}; margin-bottom: 15px; letter-spacing: 1px;">{item['judul'].upper()}</h4>
                     </div>
                 """, unsafe_allow_html=True)
                 try:
                     st.video(item['url'])
                 except Exception:
-                    st.warning("Video can't be opened, move toward direct link")
-                st.link_button("🔗 OPEN IN YOUTUBE", item['url'], use_container_width=True)
+                    st.warning("Video tidak bisa ditampilkan, coba buka link langsung.")
+                st.link_button("🔗 BUKA DI YOUTUBE", item['url'], use_container_width=True)
                 st.write("") # Spacing
 
         if item_belum_siap > 0:
             st.markdown(f"""
-                <div class="demo-card" style="opacity: 0.5;">
-                    <h4 style="font-family: 'Rajdhani'; color: #00f2ff; margin-bottom: 5px; letter-spacing: 1px;">COMING SOON</h4>
-                    <p style="font-family: 'Rajdhani'; color: white; font-size: 0.85rem; margin: 0;">{item_belum_siap} demo video(s) haven't been uploaded</p>
+                <div class="demo-card" style="opacity: 0.6;">
+                    <h4 style="font-family: 'Rajdhani'; color: {T['accent']}; margin-bottom: 5px; letter-spacing: 1px;">COMING SOON</h4>
+                    <p style="font-family: 'Rajdhani'; color: {T['text']}; font-size: 0.85rem; margin: 0;">{item_belum_siap} demo video(s) haven't been uploaded</p>
                 </div>
             """, unsafe_allow_html=True)
 
         if not item_siap and item_belum_siap == 0:
             st.warning("No demo links found for this batch.")
 
-
+# Sidebar & Footer tetap sama...
 with st.sidebar:
-    st.markdown("<p style='font-family:Orbitron; color:#00f2ff; font-size:0.7rem;'>CONTROL STATION</p>", unsafe_allow_html=True)
+    st.markdown(f"<p style='font-family:Orbitron; color:{T['accent']}; font-size:0.7rem;'>CONTROL STATION</p>", unsafe_allow_html=True)
     if st.button("REBOOT"): 
         set_page('Home')
         st.rerun()
@@ -374,20 +422,20 @@ with st.sidebar:
         if pw == "AndreEC2026":
             st.link_button("DATABASE", "https://docs.google.com/spreadsheets/d/13a0SStLqMqXMO8fgUImPyMI8jhSEMMQJTE7hQSIYInY/edit?gid=1587199457#gid=1587199457", use_container_width=True)
 
-st.markdown("""
+st.markdown(f"""
     <div style="
         position: fixed;
         left: 0;
         bottom: 0;
         width: 100%;
-        background-color: rgba(5, 7, 10, 0.9);
-        color: #00f2ff;
+        background-color: {T['footer_bg']};
+        color: {T['accent']};
         text-align: center;
         padding: 10px 0;
         font-family: 'Rajdhani', sans-serif;
         font-size: 0.8rem;
         letter-spacing: 2px;
-        border-top: 1px solid rgba(0, 242, 255, 0.2);
+        border-top: 1px solid rgba({T['accent_rgb']}, 0.2);
         backdrop-filter: blur(5px);
         z-index: 999;
     ">
