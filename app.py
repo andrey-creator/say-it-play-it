@@ -26,7 +26,7 @@ st.set_page_config(
     }
 )
 
-@st.cache_data(ttl=300)  # cache 5 menit, biar nggak boros rate limit GitHub API
+@st.cache_data(ttl=300)
 def get_photos_from_github(folder_path):
     username = "andrey-creator"
     repo = "say-it-play-it"
@@ -288,7 +288,6 @@ elif st.session_state.menu_pilihan == 'Demo':
             
     st.markdown("<h2 style='text-align:center; color:#00f2ff; font-family:Orbitron; margin-bottom:20px;'>DEMO EKSKUL</h2>", unsafe_allow_html=True)
     
-    # Pilih Tahun / Batch
     _, c_select_demo, _ = st.columns([2, 1, 2])
     with c_select_demo:
         angkatan_demo = st.selectbox(
@@ -306,7 +305,6 @@ elif st.session_state.menu_pilihan == 'Demo':
     with col_demo_content:
         list_link = DATA_DEMO_EKSKUL.get(st.session_state.angkatan_demo, [])
         
-        # Pisahkan item yang datanya sudah lengkap vs yang masih placeholder "-"
         item_siap = [item for item in list_link if item['judul'] != "-" and item['url'] != "-"]
         item_belum_siap = len(list_link) - len(item_siap)
 
@@ -324,7 +322,7 @@ elif st.session_state.menu_pilihan == 'Demo':
             st.markdown(f"""
                 <div class="demo-card" style="opacity: 0.5;">
                     <h4 style="font-family: 'Rajdhani'; color: #00f2ff; margin-bottom: 5px; letter-spacing: 1px;">COMING SOON</h4>
-                    <p style="font-family: 'Rajdhani'; color: white; font-size: 0.85rem; margin: 0;">{item_belum_siap} demo video belum diupload</p>
+                    <p style="font-family: 'Rajdhani'; color: white; font-size: 0.85rem; margin: 0;">{item_belum_siap} demo video(s) haven't been uploaded</p>
                 </div>
             """, unsafe_allow_html=True)
 
