@@ -252,18 +252,29 @@ def get_pengurus_from_sheet():
             st.sidebar.warning("Gagal ambil data pengurus dari Sheet, pakai data cadangan.", icon=":material/warning:")
             return DATA_PENGURUS_FALLBACK
 
-        reader = csv.DictReader(io.StringIO(response.text))
+        # Buang BOM (kalau ada) biar header pertama nggak ketuker jadi '\ufeffnama'
+        raw_text = response.text.lstrip('\ufeff')
+        reader = csv.DictReader(io.StringIO(raw_text))
+
         data = []
-        for row in reader:
-            nama = (row.get("nama") or "").strip()
-            jabatan = (row.get("jabatan") or "").strip()
-            urutan_str = (row.get("urutan") or "").strip()
+        for i, row in enumerate(reader):
+            # Normalisasi key: lowercase + strip, biar 'Nama', ' urutan ', dll tetap kebaca
+            row_norm = {(k or "").strip().lower(): (v or "").strip() for k, v in row.items()}
+
+            nama = row_norm.get("nama", "")
+            jabatan = row_norm.get("jabatan", "")
+            urutan_str = row_norm.get("urutan", "")
+
             if not nama or not jabatan:
                 continue
+
+            # Bersihkan format angka yang umum dari Sheets (misal "1.0", "1,0", spasi)
+            urutan_str = urutan_str.replace(",", ".").strip()
             try:
-                urutan = int(urutan_str)
+                urutan = int(float(urutan_str)) if urutan_str else i
             except ValueError:
-                urutan = len(data)
+                urutan = i
+
             data.append({"nama": nama, "jabatan": jabatan, "_urutan": urutan})
 
         if not data:
@@ -278,6 +289,7 @@ def get_pengurus_from_sheet():
     except Exception:
         st.sidebar.warning("Format data pengurus di Sheet tidak sesuai, pakai data cadangan.", icon=":material/warning:")
         return DATA_PENGURUS_FALLBACK
+    
 @st.dialog("Preview Foto", width="large")
 def tampilkan_lightbox(img_url, caption):
     st.image(img_url, use_container_width=True)
