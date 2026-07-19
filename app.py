@@ -8,11 +8,14 @@ from urllib.parse import unquote
 
 DAFTAR_BATCH = ["batch-2025-2026", "batch-2026-2027"]
 
-# Data demo dipakai sebagai FALLBACK kalau Google Sheet belum di-set / gagal diambil.
-# Format sheet yang diharapkan (kolom, header wajib persis nama ini):
-#   batch | judul | url
-# Contoh baris: batch-2025-2026 | English Club Demo Day 2026 | https://youtu.be/G0S84LEE1qQ
-
+DATA_DEMO_EKSKUL_FALLBACK = {
+    "batch-2025-2026": [
+        {"judul": "English Club Demo Day 2026", "url": "https://youtu.be/G0S84LEE1qQ"},
+    ],
+    "batch-2026-2027": [
+        {"judul": "-", "url": "-"},
+    ]
+}
 
 GALERI_PER_PAGE = 12
 
@@ -116,18 +119,6 @@ def get_photos_from_github(folder_path):
 
 @st.cache_data(ttl=300)
 def get_demo_data_from_sheet():
-    """
-    Ambil data demo ekskul dari Google Sheet (published as CSV) supaya admin
-    bisa update video tanpa perlu edit & redeploy kode.
-
-    Cara setup:
-    1. Di Google Sheet, File > Share > Publish to web > pilih sheet yang berisi
-       kolom: batch, judul, url > format CSV > Publish.
-    2. Copy link CSV yang dihasilkan, simpan di st.secrets sebagai:
-       DEMO_SHEET_CSV_URL = "https://docs.google.com/.../pub?output=csv"
-
-    Kalau secrets belum di-set atau fetch gagal, fallback ke data hardcoded.
-    """
     csv_url = st.secrets.get("DEMO_SHEET_CSV_URL")
     if not csv_url:
         return DATA_DEMO_EKSKUL_FALLBACK
@@ -147,7 +138,6 @@ def get_demo_data_from_sheet():
             if batch in data and judul and url:
                 data[batch].append({"judul": judul, "url": url})
 
-        # Kalau sheet kosong / semua batch kosong, fallback ke data cadangan
         if not any(data.values()):
             return DATA_DEMO_EKSKUL_FALLBACK
         return data
