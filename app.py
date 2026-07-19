@@ -26,7 +26,7 @@ st.set_page_config(
     }
 )
 
-@st.cache_data(ttl=2)
+@st.cache_data(ttl=300)  # cache 5 menit, biar nggak boros rate limit GitHub API
 def get_photos_from_github(folder_path):
     username = "andrey-creator"
     repo = "say-it-play-it"
@@ -51,8 +51,12 @@ def get_photos_from_github(folder_path):
                 return image_urls
         else:
             st.sidebar.error(f"GitHub API Error: {response.status_code}")
-    except Exception:
-        return []
+    except requests.exceptions.Timeout:
+        st.sidebar.warning("⚠️ Koneksi ke GitHub timeout. Coba refresh lagi.")
+    except requests.exceptions.RequestException as e:
+        st.sidebar.warning(f"⚠️ Gagal konek ke GitHub: {e}")
+    except Exception as e:
+        st.sidebar.warning(f"⚠️ Terjadi error tak terduga saat ambil foto: {e}")
     return []
 
 # Inisialisasi session state
@@ -302,8 +306,12 @@ elif st.session_state.menu_pilihan == 'Demo':
     with col_demo_content:
         list_link = DATA_DEMO_EKSKUL.get(st.session_state.angkatan_demo, [])
         
-        if list_link:
-            for item in list_link:
+        # Pisahkan item yang datanya sudah lengkap vs yang masih placeholder "-"
+        item_siap = [item for item in list_link if item['judul'] != "-" and item['url'] != "-"]
+        item_belum_siap = len(list_link) - len(item_siap)
+
+        if item_siap:
+            for item in item_siap:
                 st.markdown(f"""
                     <div class="demo-card">
                         <h4 style="font-family: 'Rajdhani'; color: white; margin-bottom: 15px; letter-spacing: 1px;">{item['judul'].upper()}</h4>
@@ -311,7 +319,16 @@ elif st.session_state.menu_pilihan == 'Demo':
                 """, unsafe_allow_html=True)
                 st.link_button("🔗 VISIT LINK", item['url'], use_container_width=True)
                 st.write("") # Spacing
-        else:
+
+        if item_belum_siap > 0:
+            st.markdown(f"""
+                <div class="demo-card" style="opacity: 0.5;">
+                    <h4 style="font-family: 'Rajdhani'; color: #00f2ff; margin-bottom: 5px; letter-spacing: 1px;">COMING SOON</h4>
+                    <p style="font-family: 'Rajdhani'; color: white; font-size: 0.85rem; margin: 0;">{item_belum_siap} demo video belum diupload</p>
+                </div>
+            """, unsafe_allow_html=True)
+
+        if not item_siap and item_belum_siap == 0:
             st.warning("No demo links found for this batch.")
 
 # Sidebar & Footer tetap sama...
