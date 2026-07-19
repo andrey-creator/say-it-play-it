@@ -59,6 +59,12 @@ def get_photos_from_github(folder_path):
         st.sidebar.warning(f"⚠️ Terjadi error tak terduga saat ambil foto: {e}")
     return []
 
+@st.dialog("PREVIEW", width="large")
+def tampilkan_lightbox(img_url, caption):
+    st.image(img_url, use_container_width=True)
+    if caption:
+        st.markdown(f'<p class="img-label">{caption}</p>', unsafe_allow_html=True)
+
 # Inisialisasi session state
 if 'menu_pilihan' not in st.session_state:
     st.session_state.menu_pilihan = 'Home'
@@ -128,6 +134,20 @@ st.markdown("""
         background: rgba(0, 242, 255, 0.02);
         margin-bottom: 15px;
         text-align: center;
+    }
+
+    .skeleton-box {
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        border-radius: 10px;
+        margin-bottom: 25px;
+        background: linear-gradient(90deg, rgba(0,242,255,0.05) 25%, rgba(0,242,255,0.15) 37%, rgba(0,242,255,0.05) 63%);
+        background-size: 400% 100%;
+        animation: shimmer 1.4s ease-in-out infinite;
+    }
+    @keyframes shimmer {
+        0% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
     }
     </style>
     """, unsafe_allow_html=True)
@@ -262,9 +282,17 @@ elif st.session_state.menu_pilihan == 'Galeri':
         path_pencarian = f"{st.session_state.sub_menu_galeri}/{st.session_state.angkatan_pilihan}"
             
         st.write("##")
-        with st.spinner("Accessing Database..."):
-            images = get_photos_from_github(path_pencarian)
-        
+
+        skeleton_slot = st.empty()
+        with skeleton_slot.container():
+            skel_cols = st.columns(3)
+            for i in range(6):
+                with skel_cols[i % 3]:
+                    st.markdown('<div class="skeleton-box"></div>', unsafe_allow_html=True)
+
+        images = get_photos_from_github(path_pencarian)
+        skeleton_slot.empty()
+
         if images:
             cols = st.columns(3)
             for idx, img_url in enumerate(images):
@@ -273,8 +301,9 @@ elif st.session_state.menu_pilihan == 'Galeri':
                 clean_name = file_name_decoded.replace('-', ' ').replace('_', ' ').upper()
                 
                 with cols[idx % 3]: 
-                    st.image(img_url, use_container_width=True)
-                    st.markdown(f'<p class="img-label">{clean_name}</p>', unsafe_allow_html=True)
+                    st.image(img_url, use_container_width=True, caption=clean_name)
+                    if st.button("🔍 PERBESAR", key=f"lightbox_{idx}_{path_pencarian}", use_container_width=True):
+                        tampilkan_lightbox(img_url, clean_name)
         else:
             st.warning("No files found in this category.")
 
@@ -315,7 +344,11 @@ elif st.session_state.menu_pilihan == 'Demo':
                         <h4 style="font-family: 'Rajdhani'; color: white; margin-bottom: 15px; letter-spacing: 1px;">{item['judul'].upper()}</h4>
                     </div>
                 """, unsafe_allow_html=True)
-                st.link_button("🔗 VISIT LINK", item['url'], use_container_width=True)
+                try:
+                    st.video(item['url'])
+                except Exception:
+                    st.warning("Video tidak bisa ditampilkan, coba buka link langsung.")
+                st.link_button("🔗 BUKA DI YOUTUBE", item['url'], use_container_width=True)
                 st.write("") # Spacing
 
         if item_belum_siap > 0:
