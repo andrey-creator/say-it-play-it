@@ -34,6 +34,10 @@ DATA_PENGURUS_FALLBACK = [
     {"nama": "-", "jabatan": "Bendahara"},
 ]
 
+# Info grup WhatsApp - isi link & path/URL gambar QR Code di sini
+WHATSAPP_GROUP_LINK = "https://chat.whatsapp.com/GANTI_DENGAN_LINK_GRUP_ANDA"
+WHATSAPP_QR_IMAGE_URL = "https://raw.githubusercontent.com/andrey-creator/say-it-play-it/main/wa_qr_code.jpeg"
+
 # ==================== SET IKON SVG (pengganti emoji) ====================
 ICON_GALERI = '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>'
 ICON_MUSIK = '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>'
@@ -49,6 +53,7 @@ ICON_SEARCH = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" strok
 ICON_DOWNLOAD = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>'
 ICON_EKSTERNAL = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>'
 ICON_MOON = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>'
+ICON_WHATSAPP = '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/><path d="M9 10a0.5 0.5 0 0 0 1 0"/><path d="M14 10a0.5 0.5 0 0 0 1 0"/><path d="M9 13c.5 1 1.5 1.5 3 1.5s2.5-.5 3-1.5"/></svg>'
 
 def render_icon(svg, color="#00f2ff", margin_bottom=8):
     return f'<div style="display:flex;justify-content:center;color:{color};margin-bottom:{margin_bottom}px;">{svg}</div>'
@@ -660,6 +665,13 @@ if st.session_state.menu_pilihan == 'Home':
                 set_page('Tentang')
                 st.rerun()
 
+        c7, _ = st.columns(2)
+        with c7:
+            st.markdown(render_icon(ICON_WHATSAPP), unsafe_allow_html=True)
+            if st.button("WHATSAPP GROUP", key="btn_wa", use_container_width=True):
+                set_page('WhatsApp')
+                st.rerun()
+
         st.markdown("""
             <div style="text-align: center; margin-top: 40px; padding: 20px; border-top: 1px solid rgba(0, 242, 255, 0.2);">
                 <p style="font-family: 'Rajdhani', sans-serif; color: #00f2ff; letter-spacing: 2px; font-size: 1.1rem; font-weight: 500; font-style: italic;">
@@ -667,6 +679,58 @@ if st.session_state.menu_pilihan == 'Home':
                 </p>
             </div>
         """, unsafe_allow_html=True)
+
+# ==================== MENU QUEUE ====================
+elif st.session_state.menu_pilihan == 'Queue':
+    _, cb, _ = st.columns([2, 1, 2])
+    with cb:
+        tombol_dashboard()
+
+    st.markdown(render_icon(ICON_ANTRIAN, margin_bottom=10), unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align:center; color:#00f2ff; font-family:Orbitron;'>QUEUE</h2>", unsafe_allow_html=True)
+
+    st.write("##")
+    _, col_content, _ = st.columns([1, 2, 1])
+    with col_content:
+        st.markdown("""
+            <div class="demo-card">
+                <h4 style="font-family:'Rajdhani'; color:#00f2ff; margin-bottom:15px; letter-spacing:1px;">
+                    UNDER CONSTRUCTION
+                </h4>
+                <p style="font-family:'Rajdhani'; color:white; font-size:1.05rem; margin:0;">
+                    Do forgive us — this feature is still being developed. We're working hard behind the
+                    scenes to get the Queue system up and running, so do check back again soon. Thank you
+                    ever so much for your patience!
+                </p>
+            </div>
+        """, unsafe_allow_html=True)
+
+# ==================== MENU WHATSAPP GROUP ====================
+elif st.session_state.menu_pilihan == 'WhatsApp':
+    _, cb, _ = st.columns([2, 1, 2])
+    with cb:
+        tombol_dashboard()
+
+    st.markdown(render_icon(ICON_WHATSAPP, margin_bottom=10), unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align:center; color:#00f2ff; font-family:Orbitron;'>WHATSAPP GROUP</h2>", unsafe_allow_html=True)
+
+    st.write("##")
+    _, col_wa, _ = st.columns([1, 2, 1])
+    with col_wa:
+        st.markdown("""
+            <div class="demo-card">
+                <p style="font-family:'Rajdhani'; color:white; font-size:1.05rem; margin-bottom:20px;">
+                    Join our WhatsApp group to stay up to date with the latest English Club info,
+                    announcements, and activities. Scan the QR Code below or tap the button to join directly.
+                </p>
+            </div>
+        """, unsafe_allow_html=True)
+
+        st.image(WHATSAPP_QR_IMAGE_URL, use_container_width=True, caption="SCAN TO JOIN")
+
+        st.write("##")
+        st.markdown(render_icon(ICON_EKSTERNAL, margin_bottom=2), unsafe_allow_html=True)
+        st.link_button("OPEN WHATSAPP GROUP LINK", WHATSAPP_GROUP_LINK, use_container_width=True)
 
 # ==================== MENU REQUEST / FEEDBACK ====================
 elif st.session_state.menu_pilihan in ['Request', 'Feedback']:
