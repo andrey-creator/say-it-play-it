@@ -744,7 +744,7 @@ elif st.session_state.menu_pilihan == 'Tentang':
     st.markdown("<h2 style='text-align:center; color:#00f2ff; font-family:Orbitron; margin-bottom:10px;'>ABOUT US</h2>", unsafe_allow_html=True)
     st.markdown("""
         <p style="text-align:center; font-family:'Rajdhani'; color:white; font-size:1rem; max-width:600px; margin:0 auto 30px auto;">
-            English Club SMAN 1 Depok adalah ekstrakurikuler tempat siswa mengasah kemampuan berbahasa Inggris lewat diskusi, presentasi, dan berbagai kegiatan seru lainnya.
+            English Club SMAN 1 Depok is an extra-curricular society where students sharpen their English language skills through discussions, presentations, debates, broadcasting, and a host of other fun activities.
         </p>
     """, unsafe_allow_html=True)
 
