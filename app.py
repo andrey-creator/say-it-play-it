@@ -19,6 +19,32 @@ DATA_DEMO_EKSKUL_FALLBACK = {
 
 GALERI_PER_PAGE = 12
 
+# TODO: ganti nama & tanggal (format ISO, WIB) sesuai event berikutnya
+EVENT_BERIKUTNYA = {
+    "nama": "DEMO DAY BERIKUTNYA",
+    "tanggal": "2026-09-05T09:00:00",
+}
+
+# TODO: isi data pengurus inti English Club di sini
+DATA_PENGURUS = [
+    {"nama": "-", "jabatan": "Ketua"},
+    {"nama": "-", "jabatan": "Wakil Ketua"},
+    {"nama": "-", "jabatan": "Sekretaris"},
+    {"nama": "-", "jabatan": "Bendahara"},
+]
+
+# ==================== SET IKON SVG (pengganti emoji) ====================
+ICON_GALERI = '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>'
+ICON_MUSIK = '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>'
+ICON_ANTRIAN = '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>'
+ICON_FEEDBACK = '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>'
+ICON_ROKET = '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>'
+ICON_USERS = '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>'
+ICON_TV = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>'
+
+def render_icon(svg, color="#00f2ff", margin_bottom=8):
+    return f'<div style="display:flex;justify-content:center;color:{color};margin-bottom:{margin_bottom}px;">{svg}</div>'
+
 st.set_page_config(
     page_title="English Club SMAN 1 Depok",
     page_icon="🎙️",
@@ -61,7 +87,7 @@ def inject_og_tags():
         setMeta('og:type', 'website');
     </script>
     """
-    components.html(og_html, height=0, width=0)
+    st.iframe(og_html, height=1)
 
 
 inject_og_tags()
@@ -182,6 +208,56 @@ if 'angkatan_demo' not in st.session_state:
 if 'galeri_page' not in st.session_state:
     st.session_state.galeri_page = 0
 
+# ==================== MODE KIOSK (TV / MADING) ====================
+# Akses lewat URL: <alamat-dashboard>?kiosk=1
+if st.query_params.get("kiosk") == "1":
+    st.markdown("""
+        <style>
+        [data-testid='stSidebar'], [data-testid='collapsedControl'], header, footer,
+        .block-container { display: none !important; padding: 0 !important; margin: 0 !important; }
+        .stApp { background-color: #000000; }
+        </style>
+    """, unsafe_allow_html=True)
+
+    def get_semua_foto_galeri():
+        semua = []
+        for batch in DAFTAR_BATCH:
+            semua.extend(get_photos_from_github(f"activity/{batch}"))
+        return semua
+
+    gambar_kiosk = get_semua_foto_galeri()
+
+    if not gambar_kiosk:
+        st.warning("Belum ada foto untuk ditampilkan di mode kiosk.")
+        st.stop()
+
+    kiosk_html = f"""
+    <div style="position:relative; width:100%; height:100vh; background:#000000; overflow:hidden;">
+      <img id="kiosk-img" src="{gambar_kiosk[0]}"
+           style="width:100%; height:100%; object-fit:contain; transition:opacity 1s ease-in-out; opacity:1;">
+      <div style="position:absolute; bottom:24px; left:0; right:0; text-align:center;
+                  font-family:'Orbitron', sans-serif; color:#00f2ff; letter-spacing:3px;
+                  text-shadow:0 0 10px #00f2ff; font-size:1rem;">
+        ENGLISH CLUB • SMAN 1 DEPOK
+      </div>
+    </div>
+    <script>
+      const gambarList = {gambar_kiosk};
+      let idx = 0;
+      const el = document.getElementById("kiosk-img");
+      setInterval(() => {{
+          idx = (idx + 1) % gambarList.length;
+          el.style.opacity = 0;
+          setTimeout(() => {{
+              el.src = gambarList[idx];
+              el.style.opacity = 1;
+          }}, 800);
+      }}, 6000);
+    </script>
+    """
+    st.iframe(kiosk_html, height=900)
+    st.stop()
+
 # Styling CSS
 st.markdown("""
     <style>
@@ -291,29 +367,72 @@ st.markdown(f"""
 if st.session_state.menu_pilihan == 'Home':
     _, col_center, _ = st.columns([1, 2, 1])
     with col_center:
+
+        # Countdown ke event berikutnya (live, update tiap detik)
+        countdown_html = f"""
+        <div style="font-family:'Orbitron', sans-serif; text-align:center; padding:16px;
+                    border:1px solid rgba(0, 242, 255, 0.35); border-radius:12px;
+                    background:rgba(0, 242, 255, 0.05); color:#ffffff; margin-bottom:20px;">
+          <div style="font-size:0.8rem; letter-spacing:2px; color:#00f2ff; margin-bottom:8px;">
+            {EVENT_BERIKUTNYA['nama']}
+          </div>
+          <div id="cd-timer" style="font-size:1.5rem; font-weight:700; letter-spacing:1px;">--H : --J : --M : --D</div>
+        </div>
+        <script>
+          const target = new Date("{EVENT_BERIKUTNYA['tanggal']}").getTime();
+          function tick() {{
+            const now = new Date().getTime();
+            const diff = target - now;
+            const el = document.getElementById("cd-timer");
+            if (!el) return;
+            if (diff <= 0) {{ el.innerText = "Hari ini! 🎉"; return; }}
+            const d = Math.floor(diff / (1000*60*60*24));
+            const h = Math.floor((diff % (1000*60*60*24)) / (1000*60*60));
+            const m = Math.floor((diff % (1000*60*60)) / (1000*60));
+            const s = Math.floor((diff % (1000*60)) / 1000);
+            el.innerText = d + "H : " + String(h).padStart(2,'0') + "J : " + String(m).padStart(2,'0') + "M : " + String(s).padStart(2,'0') + "D";
+          }}
+          setInterval(tick, 1000);
+          tick();
+        </script>
+        """
+        st.iframe(countdown_html, height=130)
+
         c1, c2 = st.columns(2)
         with c1:
-            if st.button("🖼️\n\nGALERI EC", key="btn_galeri", use_container_width=True):
+            st.markdown(render_icon(ICON_GALERI), unsafe_allow_html=True)
+            if st.button("GALERI EC", key="btn_galeri", use_container_width=True):
                 set_page('Galeri')
                 st.rerun()
         with c2:
-            if st.button("🎵\n\nREQUEST SONG", key="btn_req", use_container_width=True):
+            st.markdown(render_icon(ICON_MUSIK), unsafe_allow_html=True)
+            if st.button("REQUEST SONG", key="btn_req", use_container_width=True):
                 set_page('Request')
                 st.rerun()
 
         c3, c4 = st.columns(2)
         with c3:
-            if st.button("📜\n\nQUEUE", key="btn_queue", use_container_width=True):
+            st.markdown(render_icon(ICON_ANTRIAN), unsafe_allow_html=True)
+            if st.button("QUEUE", key="btn_queue", use_container_width=True):
                 set_page('Queue')
                 st.rerun()
         with c4:
-            if st.button("💬\n\nFEEDBACK", key="btn_feed", use_container_width=True):
+            st.markdown(render_icon(ICON_FEEDBACK), unsafe_allow_html=True)
+            if st.button("FEEDBACK", key="btn_feed", use_container_width=True):
                 set_page('Feedback')
                 st.rerun()
 
-        if st.button("🚀\n\nDEMO EKSKUL", key="btn_demo", use_container_width=True):
-            set_page('Demo')
-            st.rerun()
+        c5, c6 = st.columns(2)
+        with c5:
+            st.markdown(render_icon(ICON_ROKET), unsafe_allow_html=True)
+            if st.button("DEMO EKSKUL", key="btn_demo", use_container_width=True):
+                set_page('Demo')
+                st.rerun()
+        with c6:
+            st.markdown(render_icon(ICON_USERS), unsafe_allow_html=True)
+            if st.button("TENTANG KAMI", key="btn_tentang", use_container_width=True):
+                set_page('Tentang')
+                st.rerun()
 
         st.markdown("""
             <div style="text-align: center; margin-top: 40px; padding: 20px; border-top: 1px solid rgba(0, 242, 255, 0.2);">
@@ -504,12 +623,45 @@ elif st.session_state.menu_pilihan == 'Demo':
         if not item_siap and item_belum_siap == 0:
             st.warning("No demo links found for this batch.")
 
+# ==================== MENU TENTANG KAMI ====================
+elif st.session_state.menu_pilihan == 'Tentang':
+    _, cb, _ = st.columns([2, 1, 2])
+    with cb:
+        if st.button("⬅️ DASHBOARD"):
+            set_page('Home')
+            st.rerun()
+
+    st.markdown(render_icon(ICON_USERS, margin_bottom=10), unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align:center; color:#00f2ff; font-family:Orbitron; margin-bottom:10px;'>TENTANG KAMI</h2>", unsafe_allow_html=True)
+    st.markdown("""
+        <p style="text-align:center; font-family:'Rajdhani'; color:white; font-size:1rem; max-width:600px; margin:0 auto 30px auto;">
+            English Club SMAN 1 Depok adalah ekstrakurikuler tempat siswa mengasah kemampuan berbahasa Inggris lewat diskusi, presentasi, dan berbagai kegiatan seru lainnya.
+        </p>
+    """, unsafe_allow_html=True)
+
+    _, col_pengurus, _ = st.columns([1, 2, 1])
+    with col_pengurus:
+        p_cols = st.columns(2)
+        for idx, orang in enumerate(DATA_PENGURUS):
+            nama_tampil = orang['nama'] if orang['nama'] != "-" else "Belum diisi"
+            with p_cols[idx % 2]:
+                st.markdown(f"""
+                    <div class="demo-card">
+                        <h4 style="font-family:'Rajdhani'; color:#00f2ff; margin-bottom:6px; letter-spacing:1px; font-size:0.8rem;">{orang['jabatan'].upper()}</h4>
+                        <p style="font-family:'Rajdhani'; color:white; font-size:1rem; margin:0; font-weight:600;">{nama_tampil}</p>
+                    </div>
+                """, unsafe_allow_html=True)
+
 
 with st.sidebar:
     st.markdown("<p style='font-family:Orbitron; color:#00f2ff; font-size:0.7rem;'>CONTROL STATION</p>", unsafe_allow_html=True)
     if st.button("REBOOT"):
         set_page('Home')
         st.rerun()
+    st.markdown("---")
+    st.markdown(render_icon(ICON_TV, margin_bottom=4), unsafe_allow_html=True)
+    st.link_button("MODE KIOSK (TV)", "?kiosk=1", use_container_width=True)
+    st.caption("Buka link ini di browser TV/mading untuk mode slideshow otomatis.")
     st.markdown("---")
     with st.expander("ADMIN"):
         pw = st.text_input("ACCESS CODE", type="password")
