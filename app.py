@@ -65,7 +65,7 @@ def tampilkan_lightbox(img_url, caption):
     if caption:
         st.markdown(f'<p class="img-label">{caption}</p>', unsafe_allow_html=True)
 
-# Inisialisasi session state
+
 if 'menu_pilihan' not in st.session_state:
     st.session_state.menu_pilihan = 'Home'
 if 'sub_menu_galeri' not in st.session_state:
@@ -302,7 +302,7 @@ elif st.session_state.menu_pilihan == 'Galeri':
                 
                 with cols[idx % 3]: 
                     st.image(img_url, use_container_width=True, caption=clean_name)
-                    if st.button("🔍 PERBESAR", key=f"lightbox_{idx}_{path_pencarian}", use_container_width=True):
+                    if st.button("🔍 Zoom", key=f"lightbox_{idx}_{path_pencarian}", use_container_width=True):
                         tampilkan_lightbox(img_url, clean_name)
         else:
             st.warning("No files found in this category.")
@@ -329,7 +329,7 @@ elif st.session_state.menu_pilihan == 'Demo':
 
     st.write("##")
     
-    # Menampilkan daftar link berdasarkan tahun yang dipilih
+
     _, col_demo_content, _ = st.columns([1, 2, 1])
     with col_demo_content:
         list_link = DATA_DEMO_EKSKUL.get(st.session_state.angkatan_demo, [])
@@ -347,8 +347,8 @@ elif st.session_state.menu_pilihan == 'Demo':
                 try:
                     st.video(item['url'])
                 except Exception:
-                    st.warning("Video tidak bisa ditampilkan, coba buka link langsung.")
-                st.link_button("🔗 BUKA DI YOUTUBE", item['url'], use_container_width=True)
+                    st.warning("Video can't be opened, move toward direct link")
+                st.link_button("🔗 OPEN IN YOUTUBE", item['url'], use_container_width=True)
                 st.write("") # Spacing
 
         if item_belum_siap > 0:
@@ -362,7 +362,7 @@ elif st.session_state.menu_pilihan == 'Demo':
         if not item_siap and item_belum_siap == 0:
             st.warning("No demo links found for this batch.")
 
-# Sidebar & Footer tetap sama...
+
 with st.sidebar:
     st.markdown("<p style='font-family:Orbitron; color:#00f2ff; font-size:0.7rem;'>CONTROL STATION</p>", unsafe_allow_html=True)
     if st.button("REBOOT"): 
