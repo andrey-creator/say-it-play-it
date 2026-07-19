@@ -20,13 +20,13 @@ DATA_DEMO_EKSKUL_FALLBACK = {
 
 GALERI_PER_PAGE = 12
 
-# Dipakai kalau secrets EVENT_SHEET_CSV_URL belum diisi / gagal diakses
+
 EVENT_BERIKUTNYA_FALLBACK = {
     "nama": "DEMO DAY BERIKUTNYA",
     "tanggal": "2026-09-05T09:00:00",
 }
 
-# Dipakai kalau secrets PENGURUS_SHEET_CSV_URL belum diisi / gagal diakses
+
 DATA_PENGURUS_FALLBACK = [
     {"nama": "-", "jabatan": "Ketua"},
     {"nama": "-", "jabatan": "Wakil Ketua"},
@@ -34,11 +34,11 @@ DATA_PENGURUS_FALLBACK = [
     {"nama": "-", "jabatan": "Bendahara"},
 ]
 
-# Info grup WhatsApp - isi link & path/URL gambar QR Code di sini
-WHATSAPP_GROUP_LINK = "https://chat.whatsapp.com/GANTI_DENGAN_LINK_GRUP_ANDA"
-WHATSAPP_QR_IMAGE_URL = "https://raw.githubusercontent.com/andrey-creator/say-it-play-it/main/wa_qr_code.jpeg"
 
-# ==================== SET IKON SVG (pengganti emoji) ====================
+WHATSAPP_GROUP_LINK = "https://chat.whatsapp.com/HXO5L4AhuXR5bBqzt1aFpc"
+WHATSAPP_QR_IMAGE_URL = "https://github.com/andrey-creator/say-it-play-it/blob/719016095985bfda5d3be6496a5d75302236e726/QR_WhatsApp_Group.png"
+
+
 ICON_GALERI = '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>'
 ICON_MUSIK = '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>'
 ICON_ANTRIAN = '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>'
