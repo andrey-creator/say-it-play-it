@@ -763,14 +763,12 @@ elif st.session_state.menu_pilihan == 'Galeri':
             end = start + GALERI_PER_PAGE
             images_page = images[start:end]
 
-            JUMLAH_BADGE_BARU = 3  # sejumlah foto paling baru yang ditandai (hanya di halaman pertama)
 
             cols = st.columns(3)
             for idx, img_url in enumerate(images_page):
                 file_name_encoded = img_url.split('/')[-1].rsplit('.', 1)[0]
                 file_name_decoded = unquote(file_name_encoded)
                 clean_name = file_name_decoded.replace('-', ' ').replace('_', ' ').upper()
-                foto_baru = st.session_state.galeri_page == 0 and idx < JUMLAH_BADGE_BARU
 
                 with cols[idx % 3]:
                     if foto_baru:
