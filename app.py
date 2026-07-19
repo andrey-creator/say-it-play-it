@@ -36,7 +36,7 @@ DATA_PENGURUS_FALLBACK = [
 
 
 WHATSAPP_GROUP_LINK = "https://chat.whatsapp.com/HXO5L4AhuXR5bBqzt1aFpc"
-WHATSAPP_QR_IMAGE_URL = "https://github.com/andrey-creator/say-it-play-it/blob/719016095985bfda5d3be6496a5d75302236e726/QR_WhatsApp_Group.png"
+WHATSAPP_QR_IMAGE_URL = "https://raw.githubusercontent.com/andrey-creator/say-it-play-it/main/QR_WhatsApp_Group.png"
 
 
 ICON_GALERI = '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>'
