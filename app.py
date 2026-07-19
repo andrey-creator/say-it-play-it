@@ -12,17 +12,9 @@ DAFTAR_BATCH = ["batch-2025-2026", "batch-2026-2027"]
 # Format sheet yang diharapkan (kolom, header wajib persis nama ini):
 #   batch | judul | url
 # Contoh baris: batch-2025-2026 | English Club Demo Day 2026 | https://youtu.be/G0S84LEE1qQ
-DATA_DEMO_EKSKUL_FALLBACK = {
-    "batch-2025-2026": [
-        {"judul": "English Club Demo Day 2026", "url": "https://youtu.be/G0S84LEE1qQ"},
-    ],
-    "batch-2026-2027": [
-        {"judul": "-", "url": "-"},
-        {"judul": "-", "url": "-"},
-    ]
-}
 
-GALERI_PER_PAGE = 12  # jumlah foto per halaman di galeri
+
+GALERI_PER_PAGE = 12
 
 st.set_page_config(
     page_title="English Club SMAN 1 Depok",
