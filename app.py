@@ -39,7 +39,7 @@ WOTD_FALLBACK = {
     "tanggal": "",
     "kata": "Serendipity",
     "pengucapan": "/ˌser.ənˈdɪp.ə.ti/",
-    "arti": "Menemukan sesuatu yang baik secara tidak sengaja",
+    "arti": "the fact of finding interesting or valuable things by chance",
     "jenis_kata": "noun",
     "contoh": "Meeting my best friend at that random cafe was pure serendipity.",
 }
@@ -85,13 +85,7 @@ st.set_page_config(
 # ==================== OPEN GRAPH META TAG (BEST EFFORT) ====================
 def inject_og_tags():
     """
-    Menyuntikkan Open Graph meta tag ke <head> lewat JavaScript.
-    CATATAN PENTING: Streamlit adalah aplikasi client-side (JS-rendered).
-    Crawler WhatsApp/Instagram/FB TIDAK menjalankan JavaScript saat mengambil
-    preview link, jadi cara ini TIDAK menjamin preview bagus muncul di WhatsApp dsb.
-    Ini best-effort untuk tab browser & beberapa crawler modern yang render JS.
-    Untuk jaminan penuh di WhatsApp/FB, perlu solusi server-side terpisah
-    (misal halaman statis pembungkus / proxy) di luar Streamlit murni.
+    -
     """
     og_html = """
     <script>
@@ -311,12 +305,7 @@ def get_pengurus_from_sheet():
 @st.cache_data(ttl=3600)
 def get_wotd_from_sheet():
     """
-    Ambil Word of the Day dari Google Sheet (kolom: tanggal[opsional], kata,
-    pengucapan, arti, jenis_kata, contoh). Kalau ada baris dengan tanggal =
-    hari ini, pakai itu. Kalau tidak ada tanggal yang cocok (atau kolom
-    tanggal dikosongkan semua), rotasi otomatis berdasarkan hari dalam
-    setahun supaya kata tetap berganti tiap hari walau sheet-nya statis.
-    Kalau secrets belum diisi / gagal / kosong, pakai fallback.
+    -
     """
     csv_url = st.secrets.get("WOTD_SHEET_CSV_URL")
     if not csv_url:
@@ -652,10 +641,10 @@ if st.session_state.menu_pilihan == 'Home':
     _, col_center, _ = st.columns([1, 2, 1])
     with col_center:
 
-        # Countdown ke event berikutnya (live, update tiap detik)
+
         event_berikutnya = get_event_from_sheet()
 
-        # Format tanggal jadi lebih ramah dibaca, misal "5 September 2026, 09:00"
+
         NAMA_BULAN = [
             "", "Januari", "Februari", "Maret", "April", "Mei", "Juni",
             "Juli", "Agustus", "September", "Oktober", "November", "Desember"
@@ -698,7 +687,7 @@ if st.session_state.menu_pilihan == 'Home':
         """
         st.iframe(countdown_html, height=155)
 
-        # Word of the Day (cuplikan singkat di Home)
+
         wotd_home = get_wotd_from_sheet()
         wotd_card_html = f"""
         <div style="font-family:'Rajdhani', sans-serif; text-align:center; padding:14px;
