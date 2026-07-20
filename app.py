@@ -627,26 +627,7 @@ if st.session_state.menu_pilihan == 'Home':
           tick();
         </script>
         """
-
         st.iframe(countdown_html, height=155)
-
-        # ==================== SPOTIFY EMBED (We Are The World - USA For Africa) ====================
-        spotify_html = """
-        <div style="border-radius:12px; overflow:hidden; margin-bottom:20px; box-shadow:0 0 15px rgba(0,242,255,0.15);">
-            <iframe
-                style="border-radius:12px;"
-                src="https://open.spotify.com/embed/track/3Z2tPWiNiIpg8UMMoowHIk?utm_source=generator&theme=0"
-                width="100%"
-                height="152"
-                frameBorder="0"
-                allowfullscreen=""
-                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                loading="lazy">
-            </iframe>
-        </div>
-        """
-        st.iframe(spotify_html, height=160)
-
 
         c1, c2 = st.columns(2)
         with c1:
@@ -951,7 +932,7 @@ elif st.session_state.menu_pilihan == 'Tentang':
     with col_pengurus:
         data_pengurus = get_pengurus_from_sheet()
 
-        # Statistik ringan: dihitung dari data yang sudah di-cache, tanpa request tambahan
+
         total_pengurus_terisi = sum(1 for o in data_pengurus if o['nama'] != "-")
         total_foto_semua_batch = sum(
             len(get_photos_from_github(f"activity/{batch}")) for batch in DAFTAR_BATCH
