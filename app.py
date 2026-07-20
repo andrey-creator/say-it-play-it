@@ -35,6 +35,16 @@ DATA_PENGURUS_FALLBACK = [
 ]
 
 
+WOTD_FALLBACK = {
+    "tanggal": "",
+    "kata": "Serendipity",
+    "pengucapan": "/ˌser.ənˈdɪp.ə.ti/",
+    "arti": "Menemukan sesuatu yang baik secara tidak sengaja",
+    "jenis_kata": "noun",
+    "contoh": "Meeting my best friend at that random cafe was pure serendipity.",
+}
+
+
 WHATSAPP_GROUP_LINK = "https://chat.whatsapp.com/HXO5L4AhuXR5bBqzt1aFpc"
 WHATSAPP_QR_IMAGE_URL = "https://raw.githubusercontent.com/andrey-creator/say-it-play-it/main/QR_WhatsApp_Group.png"
 
@@ -54,6 +64,7 @@ ICON_DOWNLOAD = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" str
 ICON_EKSTERNAL = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>'
 ICON_MOON = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>'
 ICON_WHATSAPP = '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/><path d="M9 10a0.5 0.5 0 0 0 1 0"/><path d="M14 10a0.5 0.5 0 0 0 1 0"/><path d="M9 13c.5 1 1.5 1.5 3 1.5s2.5-.5 3-1.5"/></svg>'
+ICON_BUKU = '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>'
 
 def render_icon(svg, color="#00f2ff", margin_bottom=8):
     return f'<div style="display:flex;justify-content:center;color:{color};margin-bottom:{margin_bottom}px;">{svg}</div>'
@@ -295,6 +306,64 @@ def get_pengurus_from_sheet():
     except Exception:
         st.toast("Format data pengurus di Sheet tidak sesuai, pakai data cadangan.", icon=":material/warning:")
         return DATA_PENGURUS_FALLBACK
+
+
+@st.cache_data(ttl=3600)
+def get_wotd_from_sheet():
+    """
+    Ambil Word of the Day dari Google Sheet (kolom: tanggal[opsional], kata,
+    pengucapan, arti, jenis_kata, contoh). Kalau ada baris dengan tanggal =
+    hari ini, pakai itu. Kalau tidak ada tanggal yang cocok (atau kolom
+    tanggal dikosongkan semua), rotasi otomatis berdasarkan hari dalam
+    setahun supaya kata tetap berganti tiap hari walau sheet-nya statis.
+    Kalau secrets belum diisi / gagal / kosong, pakai fallback.
+    """
+    csv_url = st.secrets.get("WOTD_SHEET_CSV_URL")
+    if not csv_url:
+        return WOTD_FALLBACK
+
+    try:
+        response = requests.get(csv_url, timeout=10)
+        if response.status_code != 200:
+            st.toast("Gagal ambil Word of the Day dari Sheet, pakai data cadangan.", icon=":material/warning:")
+            return WOTD_FALLBACK
+
+        raw_text = response.text.lstrip('\ufeff')
+        reader = csv.DictReader(io.StringIO(raw_text))
+
+        daftar = []
+        for row in reader:
+            row_norm = {(k or "").strip().lower(): (v or "").strip() for k, v in row.items()}
+            kata = row_norm.get("kata", "")
+            if not kata:
+                continue
+            daftar.append({
+                "tanggal": row_norm.get("tanggal", ""),
+                "kata": kata,
+                "pengucapan": row_norm.get("pengucapan", ""),
+                "arti": row_norm.get("arti", ""),
+                "jenis_kata": row_norm.get("jenis_kata", ""),
+                "contoh": row_norm.get("contoh", ""),
+            })
+
+        if not daftar:
+            return WOTD_FALLBACK
+
+        hari_ini_str = datetime.now().strftime("%Y-%m-%d")
+        cocok = [d for d in daftar if d["tanggal"] == hari_ini_str]
+        if cocok:
+            return cocok[0]
+
+        # Tidak ada tanggal yang cocok -> rotasi otomatis pakai hari ke-N dalam setahun
+        hari_ke_n = datetime.now().timetuple().tm_yday
+        return daftar[hari_ke_n % len(daftar)]
+
+    except requests.exceptions.RequestException:
+        st.toast("Gagal konek ke Google Sheet (WOTD), pakai data cadangan.", icon=":material/warning:")
+        return WOTD_FALLBACK
+    except Exception:
+        st.toast("Format data Word of the Day di Sheet tidak sesuai, pakai data cadangan.", icon=":material/warning:")
+        return WOTD_FALLBACK
 
 
 @st.dialog("Preview Foto", width="large")
@@ -629,6 +698,22 @@ if st.session_state.menu_pilihan == 'Home':
         """
         st.iframe(countdown_html, height=155)
 
+        # Word of the Day (cuplikan singkat di Home)
+        wotd_home = get_wotd_from_sheet()
+        wotd_card_html = f"""
+        <div style="font-family:'Rajdhani', sans-serif; text-align:center; padding:14px;
+                    border:1px solid rgba(0, 242, 255, 0.25); border-radius:12px;
+                    background:rgba(0, 242, 255, 0.04); color:#ffffff; margin-bottom:20px;">
+          <div style="font-size:0.7rem; letter-spacing:2px; color:#00f2ff; font-family:'Orbitron', sans-serif;">
+            WORD OF THE DAY
+          </div>
+          <div style="font-size:1.4rem; font-weight:700; margin-top:6px;">{wotd_home['kata']}</div>
+          <div style="font-size:0.85rem; color:#aaaaaa; font-style:italic;">{wotd_home.get('pengucapan', '')} · {wotd_home.get('jenis_kata', '')}</div>
+          <div style="font-size:0.95rem; color:#dddddd; margin-top:6px;">{wotd_home.get('arti', '')}</div>
+        </div>
+        """
+        st.markdown(wotd_card_html, unsafe_allow_html=True)
+
         c1, c2 = st.columns(2)
         with c1:
             st.markdown(render_icon(ICON_GALERI), unsafe_allow_html=True)
@@ -665,11 +750,16 @@ if st.session_state.menu_pilihan == 'Home':
                 set_page('Tentang')
                 st.rerun()
 
-        c7, _ = st.columns(2)
+        c7, c8 = st.columns(2)
         with c7:
             st.markdown(render_icon(ICON_WHATSAPP), unsafe_allow_html=True)
             if st.button("WHATSAPP GROUP", key="btn_wa", use_container_width=True):
                 set_page('WhatsApp')
+                st.rerun()
+        with c8:
+            st.markdown(render_icon(ICON_BUKU), unsafe_allow_html=True)
+            if st.button("WORD OF THE DAY", key="btn_wotd", use_container_width=True):
+                set_page('WOTD')
                 st.rerun()
 
         st.markdown("""
@@ -913,6 +1003,34 @@ elif st.session_state.menu_pilihan == 'Demo':
 
         if not item_siap and item_belum_siap == 0:
             st.warning("No demo links found for this batch.")
+
+# ==================== MENU WORD OF THE DAY ====================
+elif st.session_state.menu_pilihan == 'WOTD':
+    _, cb, _ = st.columns([2, 1, 2])
+    with cb:
+        tombol_dashboard()
+
+    st.markdown(render_icon(ICON_BUKU, margin_bottom=10), unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align:center; color:#00f2ff; font-family:Orbitron;'>WORD OF THE DAY</h2>", unsafe_allow_html=True)
+
+    st.write("##")
+    _, col_wotd, _ = st.columns([1, 2, 1])
+    with col_wotd:
+        wotd = get_wotd_from_sheet()
+        st.markdown(f"""
+            <div class="demo-card" style="text-align:center;">
+                <h1 style="font-family:'Orbitron'; color:white; font-size:2rem; margin-bottom:4px;">{wotd['kata']}</h1>
+                <p style="font-family:'Rajdhani'; color:#00f2ff; font-style:italic; font-size:1rem; margin-bottom:16px;">
+                    {wotd.get('pengucapan', '')} · {wotd.get('jenis_kata', '')}
+                </p>
+                <p style="font-family:'Rajdhani'; color:white; font-size:1.1rem; margin-bottom:16px;">
+                    <strong>Arti:</strong> {wotd.get('arti', '-')}
+                </p>
+                <p style="font-family:'Rajdhani'; color:#dddddd; font-size:1rem; font-style:italic;">
+                    "{wotd.get('contoh', '-')}"
+                </p>
+            </div>
+        """, unsafe_allow_html=True)
 
 # ==================== MENU TENTANG KAMI ====================
 elif st.session_state.menu_pilihan == 'Tentang':
