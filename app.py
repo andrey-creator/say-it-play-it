@@ -1013,7 +1013,7 @@ elif st.session_state.menu_pilihan == 'WOTD':
                     {wotd.get('pengucapan', '')} · {wotd.get('jenis_kata', '')}
                 </p>
                 <p style="font-family:'Rajdhani'; color:white; font-size:1.1rem; margin-bottom:16px;">
-                    <strong>Arti:</strong> {wotd.get('arti', '-')}
+                    <strong>Meaning:</strong> {wotd.get('arti', '-')}
                 </p>
                 <p style="font-family:'Rajdhani'; color:#dddddd; font-size:1rem; font-style:italic;">
                     "{wotd.get('contoh', '-')}"
