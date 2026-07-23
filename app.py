@@ -811,8 +811,8 @@ elif st.session_state.menu_pilihan == 'Queue':
         now_playing_html = (
             '<div class="demo-card">'
             '<h4 style="color:#00f2ff;font-family:Orbitron;margin-bottom:10px;">NOW PLAYING</h4>'
-            f'<p style="font-size:1.2rem;color:white;">🎵 {now_playing["song"]}</p>'
-            f'<p style="color:#cccccc;">{now_playing["name"]} ({now_playing["class"]})</p>'
+            f'<p style="font-size:1.2rem;color:white;">🎵 {now_playing["Song artist - tittle"]}</p>'
+            f'<p style="color:#cccccc;">{now_playing["Full Name/Anonymous:"]} ({now_playing["Class"]})</p>'
             '</div>'
         )
         st.markdown(now_playing_html, unsafe_allow_html=True)
