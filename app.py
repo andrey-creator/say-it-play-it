@@ -387,21 +387,19 @@ def get_queue_from_sheet():
 
             data.append({
     "name": (
-        row_norm.get("name")
-        or row_norm.get("nama")
+        row_norm.get("Full Name/Anonymous:")
+        or row_norm.get("Full Name/Anonymous:")
         or "-"
     ),
 
     "class": (
-        row_norm.get("class")
-        or row_norm.get("kelas")
+        row_norm.get("Class")
+        or row_norm.get("Class")
         or "-"
     ),
 
     "song": (
-        row_norm.get("song artist-title")
-        or row_norm.get("song")
-        or row_norm.get("artist-title")
+        row_norm.get("Song artist-title")
         or "-"
     )
 })
