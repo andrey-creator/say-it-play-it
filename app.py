@@ -811,8 +811,8 @@ elif st.session_state.menu_pilihan == 'Queue':
         now_playing_html = (
             '<div class="demo-card">'
             '<h4 style="color:#00f2ff;font-family:Orbitron;margin-bottom:10px;">NOW PLAYING</h4>'
-            f'<p style="font-size:1.2rem;color:white;">🎵 {now_playing["Song artist - tittle"]}</p>'
-            f'<p style="color:#cccccc;">{now_playing["Full Name/Anonymous:"]} ({now_playing["Class"]})</p>'
+            f'<p style="font-size:1.2rem;color:white;">🎵 {now_playing["song"]}</p>'
+            f'<p style="color:#cccccc;">{now_playing["name"]} ({now_playing["class"]})</p>'
             '</div>'
         )
         st.markdown(now_playing_html, unsafe_allow_html=True)
@@ -823,8 +823,8 @@ elif st.session_state.menu_pilihan == 'Queue':
             item_html = (
                 '<div class="demo-card">'
                 f'<h4 style="color:#00f2ff;margin-bottom:5px;">#{idx}</h4>'
-                f'<p style="color:white;margin:0;"><b>{item["Full Name/Anonymous:"]}</b> ({item["Class"]})</p>'
-                f'<p style="margin-top:5px;">🎵 {item["Song artist - tittle"]}</p>'
+                f'<p style="color:white;margin:0;"><b>{item["name"]}</b> ({item["class"]})</p>'
+                f'<p style="margin-top:5px;">🎵 {item["song"]}</p>'
                 '</div>'
             )
             st.markdown(item_html, unsafe_allow_html=True)
