@@ -357,20 +357,12 @@ def get_wotd_from_sheet():
 
 @st.cache_data(ttl=60)
 def get_queue_from_sheet():
-    """
-    Ambil 20 request lagu pertama dari Google Sheet.
-    Kolom yang digunakan:
-    Timestamp | Name | Class | Song Artist-Title
-    """
-
     csv_url = st.secrets.get("QUEUE_SHEET_CSV_URL")
-
     if not csv_url:
         return []
 
     try:
         response = requests.get(csv_url, timeout=10)
-
         if response.status_code != 200:
             return []
 
@@ -378,7 +370,6 @@ def get_queue_from_sheet():
         reader = csv.DictReader(io.StringIO(raw_text))
 
         data = []
-
         for row in reader:
             row_norm = {
                 (k or "").strip().lower(): (v or "").strip()
@@ -386,23 +377,10 @@ def get_queue_from_sheet():
             }
 
             data.append({
-    "name": (
-        row_norm.get("Full Name/Anonymous:")
-        or row_norm.get("Full Name/Anonymous:")
-        or "-"
-    ),
-
-    "class": (
-        row_norm.get("Class")
-        or row_norm.get("Class")
-        or "-"
-    ),
-
-    "song": (
-        row_norm.get("Song artist-title")
-        or "-"
-    )
-})
+                "name": row_norm.get("full name/anonymous:") or "-",
+                "class": row_norm.get("class") or "-",
+                "song": row_norm.get("song artist-title") or "-",
+            })
 
         return data[:20]
 
@@ -817,74 +795,39 @@ if st.session_state.menu_pilihan == 'Home':
 # ==================== MENU QUEUE ====================
 elif st.session_state.menu_pilihan == 'Queue':
     _, cb, _ = st.columns([2, 1, 2])
-
     with cb:
         tombol_dashboard()
 
-    st.markdown(
-        render_icon(ICON_ANTRIAN, margin_bottom=10),
-        unsafe_allow_html=True
-    )
-
-    st.markdown("""
-    <h2 style='text-align:center;
-               color:#00f2ff;
-               font-family:Orbitron;'>
-        SONG QUEUE
-    </h2>
-    """, unsafe_allow_html=True)
+    st.markdown(render_icon(ICON_ANTRIAN, margin_bottom=10), unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align:center; color:#00f2ff; font-family:Orbitron;'>SONG QUEUE</h2>", unsafe_allow_html=True)
 
     queue_data = get_queue_from_sheet()
 
     if not queue_data:
         st.warning("Belum ada data queue.")
     else:
-
         now_playing = queue_data[0]
 
-        st.markdown(f"""
-        <div class="demo-card">
-            <h4 style="
-                color:#00f2ff;
-                font-family:Orbitron;
-                margin-bottom:10px;">
-                NOW PLAYING
-            </h4>
-
-            <p style="font-size:1.2rem;color:white;">
-                🎵 {now_playing['song']}
-            </p>
-
-            <p style="color:#cccccc;">
-                {now_playing['name']} ({now_playing['class']})
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
+        now_playing_html = (
+            '<div class="demo-card">'
+            '<h4 style="color:#00f2ff;font-family:Orbitron;margin-bottom:10px;">NOW PLAYING</h4>'
+            f'<p style="font-size:1.2rem;color:white;">🎵 {now_playing["song"]}</p>'
+            f'<p style="color:#cccccc;">{now_playing["name"]} ({now_playing["class"]})</p>'
+            '</div>'
+        )
+        st.markdown(now_playing_html, unsafe_allow_html=True)
 
         st.write("### Up Next")
 
         for idx, item in enumerate(queue_data[1:], start=1):
-
-            st.markdown(f"""
-            <div class="demo-card">
-
-                <h4 style="
-                    color:#00f2ff;
-                    margin-bottom:5px;">
-                    #{idx}
-                </h4>
-
-                <p style="color:white;margin:0;">
-                    <b>{item['name']}</b>
-                    ({item['class']})
-                </p>
-
-                <p style="margin-top:5px;">
-                    🎵 {item['song']}
-                </p>
-
-            </div>
-            """, unsafe_allow_html=True)
+            item_html = (
+                '<div class="demo-card">'
+                f'<h4 style="color:#00f2ff;margin-bottom:5px;">#{idx}</h4>'
+                f'<p style="color:white;margin:0;"><b>{item["name"]}</b> ({item["class"]})</p>'
+                f'<p style="margin-top:5px;">🎵 {item["song"]}</p>'
+                '</div>'
+            )
+            st.markdown(item_html, unsafe_allow_html=True)
 
 # ==================== MENU WHATSAPP GROUP ====================
 elif st.session_state.menu_pilihan == 'WhatsApp':
