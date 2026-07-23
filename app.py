@@ -65,6 +65,7 @@ ICON_EKSTERNAL = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" st
 ICON_MOON = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>'
 ICON_WHATSAPP = '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/><path d="M9 10a0.5 0.5 0 0 0 1 0"/><path d="M14 10a0.5 0.5 0 0 0 1 0"/><path d="M9 13c.5 1 1.5 1.5 3 1.5s2.5-.5 3-1.5"/></svg>'
 ICON_BUKU = '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>'
+ICON_MUSIK_KECIL = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px; margin-right:4px;"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>'
 
 def render_icon(svg, color="#00f2ff", margin_bottom=8):
     return f'<div style="display:flex;justify-content:center;color:{color};margin-bottom:{margin_bottom}px;">{svg}</div>'
@@ -829,7 +830,7 @@ elif st.session_state.menu_pilihan == 'Queue':
         now_playing_html = (
             '<div class="queue-card">'
             '<h4 style="color:#00f2ff;font-family:Orbitron;margin-bottom:10px;">NOW PLAYING</h4>'
-            f'<p style="font-size:1.2rem;color:white;">🎵 {now_playing["song"]}</p>'
+            f'<p style="font-size:1.2rem;color:white;">{ICON_MUSIK_KECIL}{now_playing["song"]}</p>'
             f'<p style="color:#cccccc;">{now_playing["name"]} ({now_playing["class"]})</p>'
             '</div>'
         )
@@ -842,7 +843,7 @@ elif st.session_state.menu_pilihan == 'Queue':
                 '<div class="queue-card">'
                 f'<h4 style="color:#00f2ff;margin-bottom:5px;">#{idx}</h4>'
                 f'<p style="color:white;margin:0;"><b>{item["name"]}</b> ({item["class"]})</p>'
-                f'<p style="margin-top:5px;">🎵 {item["song"]}</p>'
+                f'<p style="margin-top:5px;">{ICON_MUSIK_KECIL}{item["song"]}</p>'
                 '</div>'
             )
             st.markdown(item_html, unsafe_allow_html=True)
