@@ -795,6 +795,7 @@ if st.session_state.menu_pilihan == 'Home':
         """, unsafe_allow_html=True)
 
 # ==================== MENU QUEUE ====================
+# ==================== MENU QUEUE (REDESIGN) ====================
 elif st.session_state.menu_pilihan == 'Queue':
     _, cb, _ = st.columns([2, 1, 2])
     with cb:
@@ -803,18 +804,117 @@ elif st.session_state.menu_pilihan == 'Queue':
     st.markdown(render_icon(ICON_ANTRIAN, margin_bottom=10), unsafe_allow_html=True)
     st.markdown("""
     <style>
-    .queue-card {
-        padding: 12px 20px;
-        border: 1px solid rgba(0, 242, 255, 0.3);
-        border-radius: 10px;
-        background: rgba(0, 242, 255, 0.02);
-        margin-bottom: 12px;
-        text-align: center;
+    .now-playing-card {
+        position: relative;
+        padding: 20px 24px;
+        border: 1px solid #00f2ff;
+        border-radius: 14px;
+        background: linear-gradient(135deg, rgba(0,242,255,0.10), rgba(0,242,255,0.02));
+        box-shadow: 0 0 20px rgba(0,242,255,0.25);
+        margin-bottom: 22px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
     }
-    .queue-card h4 { margin: 0 0 4px 0; }
-    .queue-card p { margin: 2px 0; }
+    .eq-bars {
+        display: flex;
+        align-items: flex-end;
+        gap: 3px;
+        height: 24px;
+        flex-shrink: 0;
+    }
+    .eq-bars span {
+        display: block;
+        width: 4px;
+        background: #00f2ff;
+        border-radius: 2px;
+        animation: eq 1s ease-in-out infinite;
+    }
+    .eq-bars span:nth-child(1) { height: 40%; animation-delay: 0s; }
+    .eq-bars span:nth-child(2) { height: 100%; animation-delay: 0.2s; }
+    .eq-bars span:nth-child(3) { height: 65%; animation-delay: 0.4s; }
+    .eq-bars span:nth-child(4) { height: 85%; animation-delay: 0.1s; }
+    @keyframes eq {
+        0%, 100% { transform: scaleY(0.4); }
+        50% { transform: scaleY(1); }
+    }
+    .np-label {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.7rem;
+        letter-spacing: 2px;
+        color: #00f2ff;
+        margin-bottom: 4px;
+    }
+    .np-song {
+        font-family: 'Rajdhani', sans-serif;
+        font-size: 1.25rem;
+        color: white;
+        font-weight: 700;
+        margin: 0;
+    }
+    .np-sub {
+        font-family: 'Rajdhani', sans-serif;
+        font-size: 0.9rem;
+        color: #aaaaaa;
+        margin: 2px 0 0 0;
+    }
+
+    .queue-row {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 12px 18px;
+        border: 1px solid rgba(0, 242, 255, 0.2);
+        border-radius: 10px;
+        background: rgba(255,255,255,0.02);
+        margin-bottom: 10px;
+    }
+    .rank-badge {
+        flex-shrink: 0;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: 1px solid rgba(0,242,255,0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.8rem;
+        color: #00f2ff;
+    }
+    .avatar-badge {
+        flex-shrink: 0;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: rgba(0,242,255,0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Rajdhani', sans-serif;
+        font-weight: 700;
+        color: white;
+        font-size: 0.85rem;
+    }
+    .queue-info { flex-grow: 1; min-width: 0; }
+    .queue-info .song {
+        font-family: 'Rajdhani', sans-serif;
+        color: white;
+        font-size: 1rem;
+        margin: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .queue-info .meta {
+        font-family: 'Rajdhani', sans-serif;
+        color: #999999;
+        font-size: 0.82rem;
+        margin: 2px 0 0 0;
+    }
     </style>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
+
     st.markdown("<h2 style='text-align:center; color:#00f2ff; font-family:Orbitron;'>SONG QUEUE [20 Previews]</h2>", unsafe_allow_html=True)
 
     if st.button("🔄 Refresh Queue"):
@@ -827,84 +927,35 @@ elif st.session_state.menu_pilihan == 'Queue':
         st.warning("Belum ada data queue.")
     else:
         now_playing = queue_data[0]
+        inisial = now_playing["name"][0].upper() if now_playing["name"] != "-" else "?"
 
-        now_playing_html = (
-            '<div class="queue-card">'
-            '<h4 style="color:#00f2ff;font-family:Orbitron;margin-bottom:10px;">NOW PLAYING</h4>'
-            f'<p style="font-size:1.2rem;color:white;">{ICON_MUSIK_KECIL}{now_playing["song"]}</p>'
-            f'<p style="color:#cccccc;">{ICON_USER}{now_playing["name"]} ({now_playing["class"]})</p>'
-            '</div>'
-        )
+        now_playing_html = f"""
+        <div class="now-playing-card">
+            <div class="eq-bars"><span></span><span></span><span></span><span></span></div>
+            <div>
+                <div class="np-label">NOW PLAYING</div>
+                <p class="np-song">{now_playing['song']}</p>
+                <p class="np-sub">{now_playing['name']} · {now_playing['class']}</p>
+            </div>
+        </div>
+        """
         st.markdown(now_playing_html, unsafe_allow_html=True)
 
-        st.write("### Up Next")
+        st.markdown("<p style='font-family:Rajdhani; color:#00f2ff; letter-spacing:1px; font-size:0.9rem;'>UP NEXT</p>", unsafe_allow_html=True)
 
         for idx, item in enumerate(queue_data[1:], start=1):
-            item_html = (
-                '<div class="queue-card">'
-                f'<h4 style="color:#00f2ff;margin-bottom:5px;">#{idx}</h4>'
-                f'<p style="color:white;margin:0;"><b>{ICON_USER}{item["name"]}</b> ({item["class"]})</p>'
-                f'<p style="margin-top:5px;">{ICON_MUSIK_KECIL}{item["song"]}</p>'
-                '</div>'
-            )
-            st.markdown(item_html, unsafe_allow_html=True)
-
-# ==================== MENU WHATSAPP GROUP ====================
-elif st.session_state.menu_pilihan == 'WhatsApp':
-    _, cb, _ = st.columns([2, 1, 2])
-    with cb:
-        tombol_dashboard()
-
-    st.markdown(render_icon(ICON_WHATSAPP, margin_bottom=10), unsafe_allow_html=True)
-    st.markdown("<h2 style='text-align:center; color:#00f2ff; font-family:Orbitron;'>WHATSAPP GROUP</h2>", unsafe_allow_html=True)
-
-    st.write("##")
-    _, col_wa, _ = st.columns([1, 2, 1])
-    with col_wa:
-        st.markdown("""
-            <div class="demo-card">
-                <p style="font-family:'Rajdhani'; color:white; font-size:1.05rem; margin-bottom:20px;">
-                    Join our WhatsApp group to stay up to date with the latest English Club info,
-                    announcements, and activities. Scan the QR Code below or tap the button to join directly.
-                </p>
+            inisial_item = item["name"][0].upper() if item["name"] != "-" else "?"
+            row_html = f"""
+            <div class="queue-row">
+                <div class="rank-badge">{idx}</div>
+                <div class="avatar-badge">{inisial_item}</div>
+                <div class="queue-info">
+                    <p class="song">{item['song']}</p>
+                    <p class="meta">{item['name']} · {item['class']}</p>
+                </div>
             </div>
-        """, unsafe_allow_html=True)
-
-        st.image(WHATSAPP_QR_IMAGE_URL, use_container_width=True, caption="SCAN TO JOIN")
-
-        st.write("##")
-        st.markdown(render_icon(ICON_EKSTERNAL, margin_bottom=2), unsafe_allow_html=True)
-        st.link_button("OPEN WHATSAPP GROUP LINK", WHATSAPP_GROUP_LINK, use_container_width=True)
-
-# ==================== MENU REQUEST / FEEDBACK ====================
-elif st.session_state.menu_pilihan in ['Request', 'Feedback']:
-    _, cb, _ = st.columns([2, 1, 2])
-    with cb:
-        tombol_dashboard()
-
-    if st.session_state.menu_pilihan == 'Request':
-        form_url = "https://docs.google.com/forms/d/e/1FAIpQLSel5biF_8tox1dWjFDwHUdyvgJ7Wq1LeCMsmKGeACCR4zxgbQ/viewform"
-        header_text = "REQUEST YOUR SONG"
-        btn_label = "OPEN REQUEST FORM"
-        desc_text = "Click the button below to suggest your favorite tracks for our next session."
-    else:
-        form_url = "https://docs.google.com/forms/d/e/1FAIpQLSeDaPA8ftqOYm35gT2y6f5BWBwerICz07DmanAVjcLVfLRIZQ/viewform?usp=dialog"
-        header_text = "CLUB FEEDBACK"
-        btn_label = "OPEN FEEDBACK FORM"
-        desc_text = "Share your thoughts or suggestions to help us improve the English Club."
-
-    st.write("##")
-    _, col_content, _ = st.columns([1, 2, 1])
-    with col_content:
-        st.markdown(f"""
-            <div style="text-align: center; padding: 30px; border: 1px solid rgba(0, 242, 255, 0.3); border-radius: 15px; background: rgba(0, 242, 255, 0.05);">
-                <h2 style="font-family: 'Orbitron'; color: #00f2ff; margin-bottom: 20px;">{header_text}</h2>
-                <p style="font-family: 'Rajdhani'; color: white; font-size: 1.1rem; margin-bottom: 30px;">{desc_text}</p>
-            </div>
-        """, unsafe_allow_html=True)
-
-        st.write("##")
-        st.link_button(btn_label, form_url, use_container_width=True)
+            """
+            st.markdown(row_html, unsafe_allow_html=True)
 
 # ==================== MENU GALERI ====================
 elif st.session_state.menu_pilihan == 'Galeri':
