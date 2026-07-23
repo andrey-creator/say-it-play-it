@@ -813,7 +813,7 @@ elif st.session_state.menu_pilihan == 'Queue':
     .queue-card p { margin: 2px 0; }
     </style>
 """, unsafe_allow_html=True)
-    st.markdown("<h2 style='text-align:center; color:#00f2ff; font-family:Orbitron;'>SONG QUEUE</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align:center; color:#00f2ff; font-family:Orbitron;'>SONG QUEUE [20 Previews]</h2>", unsafe_allow_html=True)
 
     if st.button("🔄 Refresh Queue"):
         get_queue_from_sheet.clear()
