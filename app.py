@@ -918,7 +918,7 @@ elif st.session_state.menu_pilihan == 'Queue':
 
     st.markdown("<h2 style='text-align:center; color:#00f2ff; font-family:Orbitron;'>SONG QUEUE [20 Previews]</h2>", unsafe_allow_html=True)
 
-    if st.button("{ICON_REFRESH}Refresh Queue"):
+    if st.button("Refresh Queue"):
         get_queue_from_sheet.clear()
         st.rerun()
 
