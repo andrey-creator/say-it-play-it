@@ -823,8 +823,8 @@ elif st.session_state.menu_pilihan == 'Queue':
             item_html = (
                 '<div class="demo-card">'
                 f'<h4 style="color:#00f2ff;margin-bottom:5px;">#{idx}</h4>'
-                f'<p style="color:white;margin:0;"><b>{item["name"]}</b> ({item["class"]})</p>'
-                f'<p style="margin-top:5px;">🎵 {item["song"]}</p>'
+                f'<p style="color:white;margin:0;"><b>{item["Full Name/Anonymous:"]}</b> ({item["Class"]})</p>'
+                f'<p style="margin-top:5px;">🎵 {item["Song artist - tittle"]}</p>'
                 '</div>'
             )
             st.markdown(item_html, unsafe_allow_html=True)
