@@ -355,6 +355,48 @@ def get_wotd_from_sheet():
         return WOTD_FALLBACK
 
 
+@st.cache_data(ttl=60)
+def get_queue_from_sheet():
+    """
+    Ambil 20 request lagu pertama dari Google Sheet.
+    Kolom yang digunakan:
+    Timestamp | Name | Class | Song Artist-Title
+    """
+
+    csv_url = st.secrets.get("QUEUE_SHEET_CSV_URL")
+
+    if not csv_url:
+        return []
+
+    try:
+        response = requests.get(csv_url, timeout=10)
+
+        if response.status_code != 200:
+            return []
+
+        raw_text = response.text.lstrip('\ufeff')
+        reader = csv.DictReader(io.StringIO(raw_text))
+
+        data = []
+
+        for row in reader:
+            row_norm = {
+                (k or "").strip().lower(): (v or "").strip()
+                for k, v in row.items()
+            }
+
+            data.append({
+                "name": row_norm.get("name", "-"),
+                "class": row_norm.get("class", "-"),
+                "song": row_norm.get("song artist-title", "-")
+            })
+
+        return data[:20]
+
+    except Exception:
+        return []
+
+
 @st.dialog("Preview Foto", width="large")
 def tampilkan_lightbox(img_url, caption):
     st.image(img_url, use_container_width=True)
@@ -762,27 +804,74 @@ if st.session_state.menu_pilihan == 'Home':
 # ==================== MENU QUEUE ====================
 elif st.session_state.menu_pilihan == 'Queue':
     _, cb, _ = st.columns([2, 1, 2])
+
     with cb:
         tombol_dashboard()
 
-    st.markdown(render_icon(ICON_ANTRIAN, margin_bottom=10), unsafe_allow_html=True)
-    st.markdown("<h2 style='text-align:center; color:#00f2ff; font-family:Orbitron;'>QUEUE</h2>", unsafe_allow_html=True)
+    st.markdown(
+        render_icon(ICON_ANTRIAN, margin_bottom=10),
+        unsafe_allow_html=True
+    )
 
-    st.write("##")
-    _, col_content, _ = st.columns([1, 2, 1])
-    with col_content:
-        st.markdown("""
-            <div class="demo-card">
-                <h4 style="font-family:'Rajdhani'; color:#00f2ff; margin-bottom:15px; letter-spacing:1px;">
-                    UNDER CONSTRUCTION
-                </h4>
-                <p style="font-family:'Rajdhani'; color:white; font-size:1.05rem; margin:0;">
-                    Do forgive us — this feature is still being developed. We're working hard behind the
-                    scenes to get the Queue system up and running, so do check back again soon. Thank you
-                    ever so much for your patience!
-                </p>
-            </div>
+    st.markdown("""
+    <h2 style='text-align:center;
+               color:#00f2ff;
+               font-family:Orbitron;'>
+        SONG QUEUE
+    </h2>
+    """, unsafe_allow_html=True)
+
+    queue_data = get_queue_from_sheet()
+
+    if not queue_data:
+        st.warning("Belum ada data queue.")
+    else:
+
+        now_playing = queue_data[0]
+
+        st.markdown(f"""
+        <div class="demo-card">
+            <h4 style="
+                color:#00f2ff;
+                font-family:Orbitron;
+                margin-bottom:10px;">
+                NOW PLAYING
+            </h4>
+
+            <p style="font-size:1.2rem;color:white;">
+                🎵 {now_playing['song']}
+            </p>
+
+            <p style="color:#cccccc;">
+                {now_playing['name']} ({now_playing['class']})
+            </p>
+        </div>
         """, unsafe_allow_html=True)
+
+        st.write("### Up Next")
+
+        for idx, item in enumerate(queue_data[1:], start=1):
+
+            st.markdown(f"""
+            <div class="demo-card">
+
+                <h4 style="
+                    color:#00f2ff;
+                    margin-bottom:5px;">
+                    #{idx}
+                </h4>
+
+                <p style="color:white;margin:0;">
+                    <b>{item['name']}</b>
+                    ({item['class']})
+                </p>
+
+                <p style="margin-top:5px;">
+                    🎵 {item['song']}
+                </p>
+
+            </div>
+            """, unsafe_allow_html=True)
 
 # ==================== MENU WHATSAPP GROUP ====================
 elif st.session_state.menu_pilihan == 'WhatsApp':
