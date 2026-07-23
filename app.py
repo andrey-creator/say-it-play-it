@@ -798,6 +798,23 @@ elif st.session_state.menu_pilihan == 'Queue':
     with cb:
         tombol_dashboard()
 
+    # 🔍 DEBUG SEMENTARA
+    csv_url = st.secrets.get("QUEUE_SHEET_CSV_URL")
+    if csv_url:
+        _resp = requests.get(csv_url, timeout=10)
+        _raw = _resp.text.lstrip('\ufeff')
+        _reader = csv.DictReader(io.StringIO(_raw))
+        _first_row = next(_reader, None)
+        st.write("Header asli dari CSV:", list(_first_row.keys()) if _first_row else "CSV kosong")
+        if _first_row:
+            st.write("Contoh isi baris pertama:", _first_row)
+    else:
+        st.write("QUEUE_SHEET_CSV_URL belum ada di secrets")
+    # 🔍 END DEBUG
+
+    st.markdown(render_icon(ICON_ANTRIAN, margin_bottom=10), unsafe_allow_html=True)
+    ...
+
     st.markdown(render_icon(ICON_ANTRIAN, margin_bottom=10), unsafe_allow_html=True)
     st.markdown("<h2 style='text-align:center; color:#00f2ff; font-family:Orbitron;'>SONG QUEUE</h2>", unsafe_allow_html=True)
 
