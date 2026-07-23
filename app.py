@@ -113,79 +113,6 @@ def inject_og_tags():
 
 inject_og_tags()
 
-def inject_pwa_tags():
-    pwa_html = """
-    <script>
-        const doc = window.parent.document;
-
-        function addLink(rel, href, extra={}) {
-            let el = doc.createElement('link');
-            el.rel = rel;
-            el.href = href;
-            for (const [k, v] of Object.entries(extra)) el.setAttribute(k, v);
-            doc.head.appendChild(el);
-        }
-        function addMeta(name, content) {
-            let el = doc.createElement('meta');
-            el.name = name;
-            el.content = content;
-            doc.head.appendChild(el);
-        }
-
-        if (!doc.querySelector("link[rel='manifest']")) {
-            addLink('manifest', window.parent.location.origin + '/static/manifest.json');
-        }
-
-        addMeta('theme-color', '#00f2ff');
-        addMeta('apple-mobile-web-app-capable', 'yes');
-        addMeta('apple-mobile-web-app-status-bar-style', 'black-translucent');
-        addMeta('apple-mobile-web-app-title', 'EC Depok');
-        addLink('apple-touch-icon', 'https://raw.githubusercontent.com/andrey-creator/say-it-play-it/main/logo_ec.jpeg');
-
-        if ('serviceWorker' in window.parent.navigator) {
-            window.parent.navigator.serviceWorker
-                .register(window.parent.location.origin + '/static/sw.js')
-                .catch(err => console.log('SW gagal register:', err));
-        }
-    </script>
-    """
-    st.iframe(pwa_html, height=1)
-
-
-inject_og_tags()
-inject_pwa_tags()
-
-def render_install_button():
-    install_html = """
-    <button id="install-btn" style="
-        display:none; width:100%; padding:0.65rem 1rem; border-radius:10px;
-        border:1px solid #00f2ff; background:transparent; color:white;
-        font-family:'Orbitron', sans-serif; font-size:0.85rem; cursor:pointer;
-    ">📲 INSTALL APP</button>
-    <script>
-        const btn = document.getElementById('install-btn');
-        const parentWin = window.parent;
-
-        parentWin.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            parentWin._deferredPrompt = e;
-            btn.style.display = 'block';
-        });
-
-        btn.addEventListener('click', async () => {
-            const promptEvent = parentWin._deferredPrompt;
-            if (!promptEvent) return;
-            promptEvent.prompt();
-            const { outcome } = await promptEvent.userChoice;
-            if (outcome === 'accepted') {
-                btn.style.display = 'none';
-            }
-            parentWin._deferredPrompt = null;
-        });
-    </script>
-    """
-    components.html(install_html, height=60)
-
 
 @st.cache_data(ttl=300)
 def get_photos_from_github(folder_path):
@@ -1276,12 +1203,12 @@ with st.sidebar:
     if simple_mode != st.session_state.simple_mode:
         st.session_state.simple_mode = simple_mode
         st.rerun()
-    st.caption("Matikan efek glow & animasi neon buat device/TV yang lebih ringan.")
+    st.caption("")
 
     st.markdown("---")
     st.markdown(render_icon(ICON_TV, margin_bottom=4), unsafe_allow_html=True)
     st.link_button("MODE KIOSK (TV)", "?kiosk=1", use_container_width=True)
-    st.caption("Buka link ini di browser TV/mading untuk mode slideshow otomatis.")
+    st.caption("")
     st.markdown("---")
     with st.expander("ADMIN"):
         pw = st.text_input("ACCESS CODE", type="password")
