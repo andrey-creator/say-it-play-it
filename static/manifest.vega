@@ -1,0 +1,22 @@
+{
+  "name": "English Club SMAN 1 Depok",
+  "short_name": "EC Depok",
+  "description": "Galeri aktivitas, request lagu, dan feedback English Club SMAN 1 Depok",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#00f2ff",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "https://raw.githubusercontent.com/andrey-creator/say-it-play-it/main/logo_ec.jpeg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "https://raw.githubusercontent.com/andrey-creator/say-it-play-it/main/logo_ec.jpeg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}
