@@ -815,6 +815,10 @@ elif st.session_state.menu_pilihan == 'Queue':
 """, unsafe_allow_html=True)
     st.markdown("<h2 style='text-align:center; color:#00f2ff; font-family:Orbitron;'>SONG QUEUE</h2>", unsafe_allow_html=True)
 
+    if st.button("🔄 Refresh Queue"):
+        get_queue_from_sheet.clear()
+        st.rerun()
+
     queue_data = get_queue_from_sheet()
 
     if not queue_data:
