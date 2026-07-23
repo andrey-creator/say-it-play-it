@@ -37,11 +37,11 @@ DATA_PENGURUS_FALLBACK = [
 
 WOTD_FALLBACK = {
     "tanggal": "",
-    "kata": "Serendipity",
-    "pengucapan": "/ˌser.ənˈdɪp.ə.ti/",
-    "arti": "the fact of finding interesting or valuable things by chance",
-    "jenis_kata": "noun",
-    "contoh": "Meeting my best friend at that random cafe was pure serendipity.",
+    "kata": "Nevrine",
+    "pengucapan": "/ˈnɜːrviːn/",
+    "arti": "The feeling of missing someone who was never yours, yet somehow still feels like a loss.",
+    "jenis_kata": "adj",
+    "contoh": "Oh, she's going through a nevrine episode right now, she misses Andre and Davin",
 }
 
 
