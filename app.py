@@ -798,11 +798,21 @@ elif st.session_state.menu_pilihan == 'Queue':
     with cb:
         tombol_dashboard()
 
-
     st.markdown(render_icon(ICON_ANTRIAN, margin_bottom=10), unsafe_allow_html=True)
-    ...
-
-    st.markdown(render_icon(ICON_ANTRIAN, margin_bottom=10), unsafe_allow_html=True)
+    st.markdown("""
+    <style>
+    .queue-card {
+        padding: 12px 20px;
+        border: 1px solid rgba(0, 242, 255, 0.3);
+        border-radius: 10px;
+        background: rgba(0, 242, 255, 0.02);
+        margin-bottom: 12px;
+        text-align: center;
+    }
+    .queue-card h4 { margin: 0 0 4px 0; }
+    .queue-card p { margin: 2px 0; }
+    </style>
+""", unsafe_allow_html=True)
     st.markdown("<h2 style='text-align:center; color:#00f2ff; font-family:Orbitron;'>SONG QUEUE</h2>", unsafe_allow_html=True)
 
     queue_data = get_queue_from_sheet()
@@ -813,7 +823,7 @@ elif st.session_state.menu_pilihan == 'Queue':
         now_playing = queue_data[0]
 
         now_playing_html = (
-            '<div class="demo-card">'
+            '<div class="queue-card">'
             '<h4 style="color:#00f2ff;font-family:Orbitron;margin-bottom:10px;">NOW PLAYING</h4>'
             f'<p style="font-size:1.2rem;color:white;">🎵 {now_playing["song"]}</p>'
             f'<p style="color:#cccccc;">{now_playing["name"]} ({now_playing["class"]})</p>'
@@ -825,7 +835,7 @@ elif st.session_state.menu_pilihan == 'Queue':
 
         for idx, item in enumerate(queue_data[1:], start=1):
             item_html = (
-                '<div class="demo-card">'
+                '<div class="queue-card">'
                 f'<h4 style="color:#00f2ff;margin-bottom:5px;">#{idx}</h4>'
                 f'<p style="color:white;margin:0;"><b>{item["name"]}</b> ({item["class"]})</p>'
                 f'<p style="margin-top:5px;">🎵 {item["song"]}</p>'
