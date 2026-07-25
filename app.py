@@ -22,16 +22,16 @@ GALERI_PER_PAGE = 12
 
 
 EVENT_BERIKUTNYA_FALLBACK = {
-    "nama": "DEMO DAY BERIKUTNYA",
+    "nama": "NEXT DEMO DAY",
     "tanggal": "2026-09-05T09:00:00",
 }
 
 
 DATA_PENGURUS_FALLBACK = [
-    {"nama": "-", "jabatan": "Ketua"},
-    {"nama": "-", "jabatan": "Wakil Ketua"},
-    {"nama": "-", "jabatan": "Sekretaris"},
-    {"nama": "-", "jabatan": "Bendahara"},
+    {"nama": "-", "jabatan": "Chairperson"},
+    {"nama": "-", "jabatan": "Vice Chairperson"},
+    {"nama": "-", "jabatan": "Secretary"},
+    {"nama": "-", "jabatan": "Treasurer"},
 ]
 
 
@@ -47,6 +47,11 @@ WOTD_FALLBACK = {
 
 WHATSAPP_GROUP_LINK = "https://chat.whatsapp.com/HXO5L4AhuXR5bBqzt1aFpc"
 WHATSAPP_QR_IMAGE_URL = "https://raw.githubusercontent.com/andrey-creator/say-it-play-it/main/QR_WhatsApp_Group.png"
+
+# Default Google Form links. These can still be overridden via secrets
+# (REQUEST_FORM_URL / FEEDBACK_FORM_URL) if the forms ever need to change.
+REQUEST_FORM_URL_DEFAULT = "https://forms.gle/wXgZryNWAkyB7oog6"
+FEEDBACK_FORM_URL_DEFAULT = "https://forms.gle/xSSN7r7EAGc1SsRn9"
 
 
 ICON_GALERI = '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>'
@@ -80,12 +85,12 @@ st.set_page_config(
     menu_items={
         'Get Help': 'https://ec-sman1depok.streamlit.app/',
         'Report a bug': None,
-        'About': "# Dashboard English Club SMAN 1 Depok. \nTempat galeri aktivitas, request lagu, dan kirim feedback!"
+        'About': "# English Club SMAN 1 Depok Dashboard. \nA place for the activity gallery, song requests, and feedback!"
     }
 )
 
 
-# ==================== OPEN GRAPH META TAG (BEST EFFORT) ====================
+# ==================== OPEN GRAPH META TAGS (BEST EFFORT) ====================
 def inject_og_tags():
     """
     -
@@ -103,7 +108,7 @@ def inject_og_tags():
             el.setAttribute('content', content);
         }
         setMeta('og:title', 'English Club SMAN 1 Depok');
-        setMeta('og:description', 'Galeri aktivitas, request lagu, demo ekskul, dan feedback English Club SMAN 1 Depok.');
+        setMeta('og:description', 'Activity gallery, song requests, club demos, and feedback for English Club SMAN 1 Depok.');
         setMeta('og:image', 'https://raw.githubusercontent.com/andrey-creator/say-it-play-it/main/logo_ec.jpeg');
         setMeta('og:type', 'website');
     </script>
@@ -142,26 +147,26 @@ def get_photos_from_github(folder_path):
             remaining = response.headers.get("X-RateLimit-Remaining")
             if remaining == "0":
                 if has_token:
-                    st.sidebar.error("Rate limit GitHub API habis. Coba lagi beberapa saat lagi.", icon=":material/error:")
+                    st.sidebar.error("GitHub API rate limit reached. Please try again shortly.", icon=":material/error:")
                 else:
                     st.sidebar.error(
-                        "Rate limit GitHub API habis (60 request/jam tanpa token). "
-                        "Set GITHUB_TOKEN di secrets supaya limitnya jauh lebih longgar (5000/jam).",
+                        "GitHub API rate limit reached (60 requests/hour without a token). "
+                        "Set GITHUB_TOKEN in secrets for a much higher limit (5000/hour).",
                         icon=":material/error:"
                     )
             else:
-                st.sidebar.error("Akses ke GitHub API ditolak (403). Cek token/permission.", icon=":material/error:")
+                st.sidebar.error("Access to the GitHub API was denied (403). Check the token/permissions.", icon=":material/error:")
         elif response.status_code == 404:
-            # Folder belum ada / belum ada foto di batch ini — bukan error, biarkan return []
+            # Folder doesn't exist yet / no photos for this batch — not an error, just return []
             pass
         else:
             st.sidebar.error(f"GitHub API Error: {response.status_code}", icon=":material/error:")
     except requests.exceptions.Timeout:
-        st.sidebar.warning("Koneksi ke GitHub timeout. Coba refresh lagi.", icon=":material/warning:")
+        st.sidebar.warning("Connection to GitHub timed out. Please refresh and try again.", icon=":material/warning:")
     except requests.exceptions.RequestException as e:
-        st.sidebar.warning(f"Gagal konek ke GitHub: {e}", icon=":material/warning:")
+        st.sidebar.warning(f"Failed to connect to GitHub: {e}", icon=":material/warning:")
     except Exception as e:
-        st.sidebar.warning(f"Terjadi error tak terduga saat ambil foto: {e}", icon=":material/warning:")
+        st.sidebar.warning(f"Unexpected error while fetching photos: {e}", icon=":material/warning:")
     return []
 
 
@@ -174,7 +179,7 @@ def get_demo_data_from_sheet():
     try:
         response = requests.get(csv_url, timeout=10)
         if response.status_code != 200:
-            st.toast("Gagal ambil data demo dari Sheet, pakai data cadangan.", icon=":material/warning:")
+            st.toast("Failed to fetch demo data from the Sheet, using fallback data.", icon=":material/warning:")
             return DATA_DEMO_EKSKUL_FALLBACK
 
         reader = csv.DictReader(io.StringIO(response.text))
@@ -191,19 +196,20 @@ def get_demo_data_from_sheet():
         return data
 
     except requests.exceptions.RequestException:
-        st.toast("Gagal konek ke Google Sheet, pakai data cadangan.", icon=":material/warning:")
+        st.toast("Failed to connect to the Google Sheet, using fallback data.", icon=":material/warning:")
         return DATA_DEMO_EKSKUL_FALLBACK
     except Exception:
-        st.toast("Format data demo di Sheet tidak sesuai, pakai data cadangan.", icon=":material/warning:")
+        st.toast("Demo data format in the Sheet is invalid, using fallback data.", icon=":material/warning:")
         return DATA_DEMO_EKSKUL_FALLBACK
 
 
 @st.cache_data(ttl=300)
 def get_event_from_sheet():
     """
-    Ambil daftar event dari Google Sheet (kolom: nama, tanggal — format ISO
-    contoh 2026-09-05T09:00:00). Otomatis pilih event dengan tanggal terdekat
-    yang belum lewat. Kalau secrets belum diisi / gagal / kosong, pakai fallback.
+    Fetch the list of events from a Google Sheet (columns: nama, tanggal —
+    ISO format, e.g. 2026-09-05T09:00:00). Automatically picks the nearest
+    upcoming event. If secrets aren't set / the request fails / there's no
+    data, fall back to the default event.
     """
     csv_url = st.secrets.get("EVENT_SHEET_CSV_URL")
     if not csv_url:
@@ -212,7 +218,7 @@ def get_event_from_sheet():
     try:
         response = requests.get(csv_url, timeout=10)
         if response.status_code != 200:
-            st.sidebar.warning("Gagal ambil data event dari Sheet, pakai data cadangan.", icon=":material/warning:")
+            st.sidebar.warning("Failed to fetch event data from the Sheet, using fallback data.", icon=":material/warning:")
             return EVENT_BERIKUTNYA_FALLBACK
 
         reader = csv.DictReader(io.StringIO(response.text))
@@ -231,8 +237,8 @@ def get_event_from_sheet():
         if not kandidat:
             return EVENT_BERIKUTNYA_FALLBACK
 
-        # Pilih event dengan tanggal terdekat yang belum lewat; kalau semua sudah
-        # lewat, pakai yang paling baru lewat (biar tidak kosong).
+        # Pick the nearest event that hasn't passed yet; if all of them have
+        # already passed, use the most recently passed one (so it's never empty).
         sekarang = datetime.now()
         akan_datang = sorted([k for k in kandidat if k["_dt"] >= sekarang], key=lambda k: k["_dt"])
         if akan_datang:
@@ -243,18 +249,19 @@ def get_event_from_sheet():
         return {"nama": terpilih["nama"], "tanggal": terpilih["tanggal"]}
 
     except requests.exceptions.RequestException:
-        st.sidebar.warning("Gagal konek ke Google Sheet (event), pakai data cadangan.", icon=":material/warning:")
+        st.sidebar.warning("Failed to connect to the Google Sheet (event), using fallback data.", icon=":material/warning:")
         return EVENT_BERIKUTNYA_FALLBACK
     except Exception:
-        st.sidebar.warning("Format data event di Sheet tidak sesuai, pakai data cadangan.", icon=":material/warning:")
+        st.sidebar.warning("Event data format in the Sheet is invalid, using fallback data.", icon=":material/warning:")
         return EVENT_BERIKUTNYA_FALLBACK
 
 
 @st.cache_data(ttl=3600)
 def get_pengurus_from_sheet():
     """
-    Ambil data pengurus dari Google Sheet (kolom: nama, jabatan, urutan[opsional]).
-    Kalau secrets belum diisi / gagal / kosong, pakai fallback.
+    Fetch committee data from a Google Sheet (columns: nama, jabatan,
+    urutan [optional]). If secrets aren't set / the request fails / there's
+    no data, fall back to the default committee list.
     """
     csv_url = st.secrets.get("PENGURUS_SHEET_CSV_URL")
     if not csv_url:
@@ -263,16 +270,16 @@ def get_pengurus_from_sheet():
     try:
         response = requests.get(csv_url, timeout=10)
         if response.status_code != 200:
-            st.toast("Gagal ambil data pengurus dari Sheet, pakai data cadangan.", icon=":material/warning:")
+            st.toast("Failed to fetch committee data from the Sheet, using fallback data.", icon=":material/warning:")
             return DATA_PENGURUS_FALLBACK
 
-        # Buang BOM (kalau ada) biar header pertama nggak ketuker jadi '\ufeffnama'
+        # Strip a BOM if present so the first header doesn't end up as '\ufeffnama'
         raw_text = response.text.lstrip('\ufeff')
         reader = csv.DictReader(io.StringIO(raw_text))
 
         data = []
         for i, row in enumerate(reader):
-            # Normalisasi key: lowercase + strip, biar 'Nama', ' urutan ', dll tetap kebaca
+            # Normalize keys: lowercase + strip, so 'Nama', ' urutan ', etc. still match
             row_norm = {(k or "").strip().lower(): (v or "").strip() for k, v in row.items()}
 
             nama = row_norm.get("nama", "")
@@ -282,7 +289,7 @@ def get_pengurus_from_sheet():
             if not nama or not jabatan:
                 continue
 
-            # Bersihkan format angka yang umum dari Sheets (misal "1.0", "1,0", spasi)
+            # Clean up common Sheets number formats (e.g. "1.0", "1,0", stray spaces)
             urutan_str = urutan_str.replace(",", ".").strip()
             try:
                 urutan = int(float(urutan_str)) if urutan_str else i
@@ -298,10 +305,10 @@ def get_pengurus_from_sheet():
         return [{"nama": d["nama"], "jabatan": d["jabatan"]} for d in data]
 
     except requests.exceptions.RequestException:
-        st.toast("Gagal konek ke Google Sheet (pengurus), pakai data cadangan.", icon=":material/warning:")
+        st.toast("Failed to connect to the Google Sheet (committee), using fallback data.", icon=":material/warning:")
         return DATA_PENGURUS_FALLBACK
     except Exception:
-        st.toast("Format data pengurus di Sheet tidak sesuai, pakai data cadangan.", icon=":material/warning:")
+        st.toast("Committee data format in the Sheet is invalid, using fallback data.", icon=":material/warning:")
         return DATA_PENGURUS_FALLBACK
 
 
@@ -317,7 +324,7 @@ def get_wotd_from_sheet():
     try:
         response = requests.get(csv_url, timeout=10)
         if response.status_code != 200:
-            st.toast("Gagal ambil Word of the Day dari Sheet, pakai data cadangan.", icon=":material/warning:")
+            st.toast("Failed to fetch Word of the Day from the Sheet, using fallback data.", icon=":material/warning:")
             return WOTD_FALLBACK
 
         raw_text = response.text.lstrip('\ufeff')
@@ -346,15 +353,15 @@ def get_wotd_from_sheet():
         if cocok:
             return cocok[0]
 
-        # Tidak ada tanggal yang cocok -> rotasi otomatis pakai hari ke-N dalam setahun
+        # No matching date -> auto-rotate using the day-of-year number
         hari_ke_n = datetime.now().timetuple().tm_yday
         return daftar[hari_ke_n % len(daftar)]
 
     except requests.exceptions.RequestException:
-        st.toast("Gagal konek ke Google Sheet (WOTD), pakai data cadangan.", icon=":material/warning:")
+        st.toast("Failed to connect to the Google Sheet (WOTD), using fallback data.", icon=":material/warning:")
         return WOTD_FALLBACK
     except Exception:
-        st.toast("Format data Word of the Day di Sheet tidak sesuai, pakai data cadangan.", icon=":material/warning:")
+        st.toast("Word of the Day data format in the Sheet is invalid, using fallback data.", icon=":material/warning:")
         return WOTD_FALLBACK
 
 
@@ -372,9 +379,9 @@ def get_queue_from_sheet():
         raw_text = response.text.lstrip('\ufeff')
         reader = csv.DictReader(io.StringIO(raw_text))
 
-        # Normalisasi header: lowercase + strip spasi/tanda baca di ujung,
-        # biar header sheet yang meleset dikit (spasi ekstra, beda kapital,
-        # ada/tidaknya titik dua) tetap terbaca dengan benar.
+        # Normalize headers: lowercase + strip surrounding whitespace/punctuation
+        # so slightly mismatched sheet headers (extra spaces, different case,
+        # a trailing colon or not) still get read correctly.
         def cari_kolom(row_norm, *kandidat_key):
             for key in kandidat_key:
                 if key in row_norm:
@@ -404,7 +411,7 @@ def get_queue_from_sheet():
         return []
 
 
-@st.dialog("Preview Foto", width="large")
+@st.dialog("Photo Preview", width="large")
 def tampilkan_lightbox(img_url, caption):
     st.image(img_url, use_container_width=True)
     if caption:
@@ -416,19 +423,19 @@ def tampilkan_lightbox(img_url, caption):
         try:
             img_bytes = requests.get(img_url, timeout=10).content
             file_ext = img_url.split('/')[-1].rsplit('.', 1)[-1] if '.' in img_url.split('/')[-1] else 'jpg'
-            file_name = (caption or "foto").replace(' ', '_').lower() + f".{file_ext}"
+            file_name = (caption or "photo").replace(' ', '_').lower() + f".{file_ext}"
             st.markdown(render_icon(ICON_DOWNLOAD, margin_bottom=2), unsafe_allow_html=True)
             downloaded = st.download_button(
-                "Download Foto",
+                "Download Photo",
                 data=img_bytes,
                 file_name=file_name,
                 mime=f"image/{file_ext}",
                 use_container_width=True
             )
             if downloaded:
-                st.toast("Foto berhasil didownload!", icon=":material/check_circle:")
+                st.toast("Photo downloaded successfully!", icon=":material/check_circle:")
         except requests.exceptions.RequestException:
-            st.warning("Gagal menyiapkan file untuk didownload.", icon=":material/warning:")
+            st.warning("Failed to prepare the file for download.", icon=":material/warning:")
 
     with col_share:
         st.markdown(render_icon(ICON_EKSTERNAL, margin_bottom=2), unsafe_allow_html=True)
@@ -437,13 +444,13 @@ def tampilkan_lightbox(img_url, caption):
             width:100%; padding:0.65rem 1rem; border-radius:10px;
             border:1px solid #00f2ff; background:transparent; color:white;
             font-family:'Orbitron', sans-serif; font-size:0.85rem; cursor:pointer;
-        ">SHARE FOTO</button>
+        ">SHARE PHOTO</button>
         <script>
         const btn = document.getElementById('share-btn');
         btn.addEventListener('click', async () => {{
             const shareData = {{
                 title: 'English Club SMAN 1 Depok',
-                text: '{(caption or "Foto").replace("'", "")} - English Club SMAN 1 Depok',
+                text: '{(caption or "Photo").replace("'", "")} - English Club SMAN 1 Depok',
                 url: '{img_url}'
             }};
             try {{
@@ -451,11 +458,11 @@ def tampilkan_lightbox(img_url, caption):
                     await navigator.share(shareData);
                 }} else {{
                     await navigator.clipboard.writeText('{img_url}');
-                    btn.innerText = 'LINK TERSALIN!';
-                    setTimeout(() => btn.innerText = 'SHARE FOTO', 1500);
+                    btn.innerText = 'LINK COPIED!';
+                    setTimeout(() => btn.innerText = 'SHARE PHOTO', 1500);
                 }}
             }} catch (err) {{
-                console.log('Share dibatalkan atau gagal', err);
+                console.log('Share cancelled or failed', err);
             }}
         }});
         </script>
@@ -476,8 +483,8 @@ if 'galeri_page' not in st.session_state:
 if 'simple_mode' not in st.session_state:
     st.session_state.simple_mode = False
 
-# ==================== MODE KIOSK (TV / MADING) ====================
-# Akses lewat URL: <alamat-dashboard>?kiosk=1
+# ==================== KIOSK MODE (TV / NOTICE BOARD) ====================
+# Access via URL: <dashboard-url>?kiosk=1
 if st.query_params.get("kiosk") == "1":
     st.markdown("""
         <style>
@@ -496,7 +503,7 @@ if st.query_params.get("kiosk") == "1":
     gambar_kiosk = get_semua_foto_galeri()
 
     if not gambar_kiosk:
-        st.warning("Belum ada foto untuk ditampilkan di mode kiosk.")
+        st.warning("There are no photos to display in kiosk mode yet.")
         st.stop()
 
     kiosk_html = f"""
@@ -526,7 +533,7 @@ if st.query_params.get("kiosk") == "1":
     components.html(kiosk_html, height=900)
     st.stop()
 
-# Styling CSS (mode neon/default)
+# Styling CSS (neon/default mode)
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap');
@@ -611,11 +618,11 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# ==================== SIMPLE MODE (matikan efek berat) ====================
+# ==================== SIMPLE MODE (disable heavy effects) ====================
 if st.session_state.simple_mode:
     st.markdown("""
         <style>
-        /* ===== SIMPLE MODE: matikan glow, shadow, animasi berat ===== */
+        /* ===== SIMPLE MODE: turn off glow, shadows, heavy animations ===== */
         .glow-text {
             text-shadow: none !important;
             color: #eeeeee !important;
@@ -685,7 +692,7 @@ st.markdown(f"""
     </div>
     """, unsafe_allow_html=True)
 
-# ==================== MENU HOME ====================
+# ==================== HOME MENU ====================
 if st.session_state.menu_pilihan == 'Home':
     _, col_center, _ = st.columns([1, 2, 1])
     with col_center:
@@ -695,12 +702,12 @@ if st.session_state.menu_pilihan == 'Home':
 
 
         NAMA_BULAN = [
-            "", "Januari", "Februari", "Maret", "April", "Mei", "Juni",
-            "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+            "", "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
         ]
         try:
             dt_event = datetime.fromisoformat(event_berikutnya['tanggal'])
-            tanggal_ramah = f"{dt_event.day} {NAMA_BULAN[dt_event.month]} {dt_event.year}, {dt_event.strftime('%H:%M')}"
+            tanggal_ramah = f"{NAMA_BULAN[dt_event.month]} {dt_event.day}, {dt_event.year}, {dt_event.strftime('%H:%M')}"
         except (ValueError, IndexError):
             tanggal_ramah = event_berikutnya['tanggal']
 
@@ -711,7 +718,7 @@ if st.session_state.menu_pilihan == 'Home':
           <div style="font-size:0.8rem; letter-spacing:2px; color:#00f2ff; margin-bottom:8px;">
             {event_berikutnya['nama']}
           </div>
-          <div id="cd-timer" style="font-size:1.5rem; font-weight:700; letter-spacing:1px;">--H : --J : --M : --D</div>
+          <div id="cd-timer" style="font-size:1.5rem; font-weight:700; letter-spacing:1px;">--D : --H : --M : --S</div>
           <div style="font-family:'Rajdhani', sans-serif; font-size:0.8rem; letter-spacing:1px; color:#aaaaaa; margin-top:8px;">
             {tanggal_ramah}
           </div>
@@ -723,12 +730,12 @@ if st.session_state.menu_pilihan == 'Home':
             const diff = target - now;
             const el = document.getElementById("cd-timer");
             if (!el) return;
-            if (diff <= 0) {{ el.innerText = "Hari ini!"; return; }}
+            if (diff <= 0) {{ el.innerText = "Today!"; return; }}
             const d = Math.floor(diff / (1000*60*60*24));
             const h = Math.floor((diff % (1000*60*60*24)) / (1000*60*60));
             const m = Math.floor((diff % (1000*60*60)) / (1000*60));
             const s = Math.floor((diff % (1000*60)) / 1000);
-            el.innerText = d + "H : " + String(h).padStart(2,'0') + "J : " + String(m).padStart(2,'0') + "M : " + String(s).padStart(2,'0') + "D";
+            el.innerText = d + "D : " + String(h).padStart(2,'0') + "H : " + String(m).padStart(2,'0') + "M : " + String(s).padStart(2,'0') + "S";
           }}
           setInterval(tick, 1000);
           tick();
@@ -755,7 +762,7 @@ if st.session_state.menu_pilihan == 'Home':
         c1, c2 = st.columns(2)
         with c1:
             st.markdown(render_icon(ICON_GALERI), unsafe_allow_html=True)
-            if st.button("GALERI EC", key="btn_galeri", use_container_width=True):
+            if st.button("EC GALLERY", key="btn_galeri", use_container_width=True):
                 set_page('Galeri')
                 st.rerun()
         with c2:
@@ -779,7 +786,7 @@ if st.session_state.menu_pilihan == 'Home':
         c5, c6 = st.columns(2)
         with c5:
             st.markdown(render_icon(ICON_ROKET), unsafe_allow_html=True)
-            if st.button("DEMO EKSKUL", key="btn_demo", use_container_width=True):
+            if st.button("CLUB DEMO", key="btn_demo", use_container_width=True):
                 set_page('Demo')
                 st.rerun()
         with c6:
@@ -808,7 +815,7 @@ if st.session_state.menu_pilihan == 'Home':
             </div>
         """, unsafe_allow_html=True)
 
-# ==================== MENU REQUEST SONG ====================
+# ==================== REQUEST SONG MENU ====================
 elif st.session_state.menu_pilihan == 'Request':
     _, cb, _ = st.columns([2, 1, 2])
     with cb:
@@ -818,17 +825,19 @@ elif st.session_state.menu_pilihan == 'Request':
     st.markdown("<h2 style='text-align:center; color:#00f2ff; font-family:Orbitron;'>REQUEST SONG</h2>", unsafe_allow_html=True)
     st.markdown("""
         <p style="text-align:center; font-family:'Rajdhani'; color:white; font-size:1rem; max-width:600px; margin:0 auto 20px auto;">
-            Mau lagu favoritmu diputar? Isi form di bawah ini!
+            Want your favorite song played? Fill out the form below!
         </p>
     """, unsafe_allow_html=True)
 
-    request_form_url = st.secrets.get("https://forms.gle/wXgZryNWAkyB7oog6")
-    if request_form_url:
+    request_form_url = st.secrets.get("REQUEST_FORM_URL", REQUEST_FORM_URL_DEFAULT)
+    try:
         components.iframe(request_form_url, height=900, scrolling=True)
-    else:
-        st.info("Link Google Form request lagu belum di-set (REQUEST_FORM_URL di secrets).", icon=":material/info:")
+    except Exception:
+        st.warning("The form couldn't be embedded here — please use the button below instead.", icon=":material/warning:")
+    st.markdown(render_icon(ICON_EKSTERNAL, margin_bottom=2), unsafe_allow_html=True)
+    st.link_button("OPEN FORM IN A NEW TAB", request_form_url, use_container_width=True)
 
-# ==================== MENU FEEDBACK ====================
+# ==================== FEEDBACK MENU ====================
 elif st.session_state.menu_pilihan == 'Feedback':
     _, cb, _ = st.columns([2, 1, 2])
     with cb:
@@ -838,17 +847,19 @@ elif st.session_state.menu_pilihan == 'Feedback':
     st.markdown("<h2 style='text-align:center; color:#00f2ff; font-family:Orbitron;'>FEEDBACK</h2>", unsafe_allow_html=True)
     st.markdown("""
         <p style="text-align:center; font-family:'Rajdhani'; color:white; font-size:1rem; max-width:600px; margin:0 auto 20px auto;">
-            Ada saran atau kritik buat English Club? Sampaikan lewat form ini.
+            Have suggestions or feedback for English Club? Share it with us using the form below.
         </p>
     """, unsafe_allow_html=True)
 
-    feedback_form_url = st.secrets.get("FEEDBACK_FORM_URL")
-    if feedback_form_url:
+    feedback_form_url = st.secrets.get("FEEDBACK_FORM_URL", FEEDBACK_FORM_URL_DEFAULT)
+    try:
         components.iframe(feedback_form_url, height=900, scrolling=True)
-    else:
-        st.info("Link Google Form feedback belum di-set (FEEDBACK_FORM_URL di secrets).", icon=":material/info:")
+    except Exception:
+        st.warning("The form couldn't be embedded here — please use the button below instead.", icon=":material/warning:")
+    st.markdown(render_icon(ICON_EKSTERNAL, margin_bottom=2), unsafe_allow_html=True)
+    st.link_button("OPEN FORM IN A NEW TAB", feedback_form_url, use_container_width=True)
 
-# ==================== MENU WHATSAPP GROUP ====================
+# ==================== WHATSAPP GROUP MENU ====================
 elif st.session_state.menu_pilihan == 'WhatsApp':
     _, cb, _ = st.columns([2, 1, 2])
     with cb:
@@ -861,19 +872,19 @@ elif st.session_state.menu_pilihan == 'WhatsApp':
     with col_wa:
         st.markdown("""
             <p style="text-align:center; font-family:'Rajdhani'; color:white; font-size:1rem; margin-bottom:20px;">
-                Scan QR atau klik tombol di bawah buat gabung grup WhatsApp English Club.
+                Scan the QR code or tap the button below to join the English Club WhatsApp group.
             </p>
         """, unsafe_allow_html=True)
         try:
             st.image(WHATSAPP_QR_IMAGE_URL, use_container_width=True)
         except Exception:
-            st.warning("QR code tidak bisa dimuat, langsung pakai tombol join di bawah.", icon=":material/warning:")
+            st.warning("The QR code couldn't be loaded — use the join button below instead.", icon=":material/warning:")
 
         st.write("##")
         st.markdown(render_icon(ICON_EKSTERNAL, margin_bottom=2), unsafe_allow_html=True)
         st.link_button("JOIN WHATSAPP GROUP", WHATSAPP_GROUP_LINK, use_container_width=True)
 
-# ==================== MENU QUEUE (REDESIGN) ====================
+# ==================== QUEUE MENU (REDESIGNED) ====================
 elif st.session_state.menu_pilihan == 'Queue':
     _, cb, _ = st.columns([2, 1, 2])
     with cb:
@@ -1002,7 +1013,7 @@ elif st.session_state.menu_pilihan == 'Queue':
     queue_data = get_queue_from_sheet()
 
     if not queue_data:
-        st.warning("Belum ada data queue.")
+        st.warning("No queue data yet.")
     else:
         now_playing = queue_data[0]
         nama_now = now_playing["name"] or "-"
@@ -1037,13 +1048,13 @@ elif st.session_state.menu_pilihan == 'Queue':
             """
             st.markdown(row_html, unsafe_allow_html=True)
 
-# ==================== MENU GALERI ====================
+# ==================== GALLERY MENU ====================
 elif st.session_state.menu_pilihan == 'Galeri':
     _, cb, _ = st.columns([2, 1, 2])
     with cb:
         tombol_dashboard()
 
-    st.markdown("<h2 style='text-align:center; color:#00f2ff; font-family:Orbitron;'>GALERI</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align:center; color:#00f2ff; font-family:Orbitron;'>GALLERY</h2>", unsafe_allow_html=True)
 
     if st.session_state.sub_menu_galeri is None:
         _, col_galeri, _ = st.columns([1, 2, 1])
@@ -1076,7 +1087,7 @@ elif st.session_state.menu_pilihan == 'Galeri':
                 label_visibility="collapsed"
             )
             if angkatan != st.session_state.angkatan_pilihan:
-                st.session_state.galeri_page = 0  # reset halaman kalau ganti batch
+                st.session_state.galeri_page = 0  # reset page when the batch changes
             st.session_state.angkatan_pilihan = angkatan
 
         path_pencarian = f"{st.session_state.sub_menu_galeri}/{st.session_state.angkatan_pilihan}"
@@ -1095,7 +1106,8 @@ elif st.session_state.menu_pilihan == 'Galeri':
 
         if images:
             total_pages = max(1, (len(images) - 1) // GALERI_PER_PAGE + 1)
-            # Jaga-jaga kalau halaman tersimpan sudah di luar batas (misal setelah data berkurang)
+            # Guard against a stored page number being out of range
+            # (e.g. if the photo count went down since the last visit).
             st.session_state.galeri_page = min(st.session_state.galeri_page, total_pages - 1)
 
             start = st.session_state.galeri_page * GALERI_PER_PAGE
@@ -1135,13 +1147,13 @@ elif st.session_state.menu_pilihan == 'Galeri':
         else:
             st.warning("No files found in this category.")
 
-# ==================== MENU DEMO EKSKUL ====================
+# ==================== CLUB DEMO MENU ====================
 elif st.session_state.menu_pilihan == 'Demo':
     _, cb, _ = st.columns([2, 1, 2])
     with cb:
         tombol_dashboard()
 
-    st.markdown("<h2 style='text-align:center; color:#00f2ff; font-family:Orbitron; margin-bottom:20px;'>DEMO EKSKUL</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align:center; color:#00f2ff; font-family:Orbitron; margin-bottom:20px;'>CLUB DEMO</h2>", unsafe_allow_html=True)
 
     _, c_select_demo, _ = st.columns([2, 1, 2])
     with c_select_demo:
@@ -1173,7 +1185,7 @@ elif st.session_state.menu_pilihan == 'Demo':
                 try:
                     st.video(item['url'])
                 except Exception:
-                    st.warning("Video can't be opened, move toward direct link")
+                    st.warning("This video can't be embedded — use the direct link below instead.")
                 st.markdown(render_icon(ICON_EKSTERNAL, margin_bottom=2), unsafe_allow_html=True)
                 st.link_button("OPEN IN YOUTUBE", item['url'], use_container_width=True)
                 st.write("")
@@ -1189,7 +1201,7 @@ elif st.session_state.menu_pilihan == 'Demo':
         if not item_siap and item_belum_siap == 0:
             st.warning("No demo links found for this batch.")
 
-# ==================== MENU WORD OF THE DAY ====================
+# ==================== WORD OF THE DAY MENU ====================
 elif st.session_state.menu_pilihan == 'WOTD':
     _, cb, _ = st.columns([2, 1, 2])
     with cb:
@@ -1217,7 +1229,7 @@ elif st.session_state.menu_pilihan == 'WOTD':
             </div>
         """, unsafe_allow_html=True)
 
-# ==================== MENU TENTANG KAMI ====================
+# ==================== ABOUT US MENU ====================
 elif st.session_state.menu_pilihan == 'Tentang':
     _, cb, _ = st.columns([2, 1, 2])
     with cb:
@@ -1279,7 +1291,7 @@ with st.sidebar:
 
     st.markdown("---")
     st.markdown(render_icon(ICON_MOON, margin_bottom=4), unsafe_allow_html=True)
-    simple_mode = st.toggle("Simple Mode (hemat performa)", value=st.session_state.simple_mode)
+    simple_mode = st.toggle("Simple Mode (better performance)", value=st.session_state.simple_mode)
     if simple_mode != st.session_state.simple_mode:
         st.session_state.simple_mode = simple_mode
         st.rerun()
@@ -1287,18 +1299,18 @@ with st.sidebar:
 
     st.markdown("---")
     st.markdown(render_icon(ICON_TV, margin_bottom=4), unsafe_allow_html=True)
-    st.link_button("MODE KIOSK (TV)", "?kiosk=1", use_container_width=True)
+    st.link_button("KIOSK MODE (TV)", "?kiosk=1", use_container_width=True)
     st.caption("")
     st.markdown("---")
     with st.expander("ADMIN"):
         pw = st.text_input("ACCESS CODE", type="password")
         admin_password = st.secrets.get("ADMIN_PASSWORD")
         if not admin_password:
-            st.caption("ADMIN_PASSWORD belum di-set di secrets.")
+            st.caption("ADMIN_PASSWORD is not set in secrets.")
         elif pw and pw == admin_password:
             st.link_button("DATABASE", "https://docs.google.com/spreadsheets/d/13a0SStLqMqXMO8fgUImPyMI8jhSEMMQJTE7hQSIYInY/edit?gid=1587199457#gid=1587199457", use_container_width=True)
         elif pw:
-            st.error("Access code salah.")
+            st.error("Incorrect access code.")
 
 st.markdown("""
     <div style="
