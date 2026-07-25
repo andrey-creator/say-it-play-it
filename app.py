@@ -108,7 +108,7 @@ def inject_og_tags():
         setMeta('og:type', 'website');
     </script>
     """
-    st.iframe(og_html, height=1)
+    components.html(og_html, height=0)
 
 
 inject_og_tags()
@@ -372,18 +372,31 @@ def get_queue_from_sheet():
         raw_text = response.text.lstrip('\ufeff')
         reader = csv.DictReader(io.StringIO(raw_text))
 
+        # Normalisasi header: lowercase + strip spasi/tanda baca di ujung,
+        # biar header sheet yang meleset dikit (spasi ekstra, beda kapital,
+        # ada/tidaknya titik dua) tetap terbaca dengan benar.
+        def cari_kolom(row_norm, *kandidat_key):
+            for key in kandidat_key:
+                if key in row_norm:
+                    return row_norm[key]
+            return ""
+
         data = []
         for row in reader:
             row_norm = {
-                (k or "").strip().lower(): (v or "").strip()
+                (k or "").strip().lower().rstrip(':').strip(): (v or "").strip()
                 for k, v in row.items()
             }
 
+            nama = cari_kolom(row_norm, "full name/anonymous", "full name / anonymous", "name") or "-"
+            kelas = cari_kolom(row_norm, "class") or "-"
+            lagu = cari_kolom(row_norm, "song artist - tittle", "song artist - title", "song") or "-"
+
             data.append({
-    "name": row_norm.get("full name/anonymous:") or "-",
-    "class": row_norm.get("class") or "-",
-    "song": row_norm.get("song artist - tittle") or "-",
-})
+                "name": nama,
+                "class": kelas,
+                "song": lagu,
+            })
 
         return data[:20]
 
@@ -510,7 +523,7 @@ if st.query_params.get("kiosk") == "1":
       }}, 6000);
     </script>
     """
-    st.iframe(kiosk_html, height=900)
+    components.html(kiosk_html, height=900)
     st.stop()
 
 # Styling CSS (mode neon/default)
@@ -721,7 +734,7 @@ if st.session_state.menu_pilihan == 'Home':
           tick();
         </script>
         """
-        st.iframe(countdown_html, height=155)
+        components.html(countdown_html, height=155)
 
 
         wotd_home = get_wotd_from_sheet()
@@ -794,6 +807,71 @@ if st.session_state.menu_pilihan == 'Home':
                 </p>
             </div>
         """, unsafe_allow_html=True)
+
+# ==================== MENU REQUEST SONG ====================
+elif st.session_state.menu_pilihan == 'Request':
+    _, cb, _ = st.columns([2, 1, 2])
+    with cb:
+        tombol_dashboard()
+
+    st.markdown(render_icon(ICON_MUSIK, margin_bottom=10), unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align:center; color:#00f2ff; font-family:Orbitron;'>REQUEST SONG</h2>", unsafe_allow_html=True)
+    st.markdown("""
+        <p style="text-align:center; font-family:'Rajdhani'; color:white; font-size:1rem; max-width:600px; margin:0 auto 20px auto;">
+            Mau lagu favoritmu diputar? Isi form di bawah ini!
+        </p>
+    """, unsafe_allow_html=True)
+
+    request_form_url = st.secrets.get("REQUEST_FORM_URL")
+    if request_form_url:
+        components.iframe(request_form_url, height=900, scrolling=True)
+    else:
+        st.info("Link Google Form request lagu belum di-set (REQUEST_FORM_URL di secrets).", icon=":material/info:")
+
+# ==================== MENU FEEDBACK ====================
+elif st.session_state.menu_pilihan == 'Feedback':
+    _, cb, _ = st.columns([2, 1, 2])
+    with cb:
+        tombol_dashboard()
+
+    st.markdown(render_icon(ICON_FEEDBACK, margin_bottom=10), unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align:center; color:#00f2ff; font-family:Orbitron;'>FEEDBACK</h2>", unsafe_allow_html=True)
+    st.markdown("""
+        <p style="text-align:center; font-family:'Rajdhani'; color:white; font-size:1rem; max-width:600px; margin:0 auto 20px auto;">
+            Ada saran atau kritik buat English Club? Sampaikan lewat form ini.
+        </p>
+    """, unsafe_allow_html=True)
+
+    feedback_form_url = st.secrets.get("FEEDBACK_FORM_URL")
+    if feedback_form_url:
+        components.iframe(feedback_form_url, height=900, scrolling=True)
+    else:
+        st.info("Link Google Form feedback belum di-set (FEEDBACK_FORM_URL di secrets).", icon=":material/info:")
+
+# ==================== MENU WHATSAPP GROUP ====================
+elif st.session_state.menu_pilihan == 'WhatsApp':
+    _, cb, _ = st.columns([2, 1, 2])
+    with cb:
+        tombol_dashboard()
+
+    st.markdown(render_icon(ICON_WHATSAPP, margin_bottom=10), unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align:center; color:#00f2ff; font-family:Orbitron;'>WHATSAPP GROUP</h2>", unsafe_allow_html=True)
+
+    _, col_wa, _ = st.columns([1, 1, 1])
+    with col_wa:
+        st.markdown("""
+            <p style="text-align:center; font-family:'Rajdhani'; color:white; font-size:1rem; margin-bottom:20px;">
+                Scan QR atau klik tombol di bawah buat gabung grup WhatsApp English Club.
+            </p>
+        """, unsafe_allow_html=True)
+        try:
+            st.image(WHATSAPP_QR_IMAGE_URL, use_container_width=True)
+        except Exception:
+            st.warning("QR code tidak bisa dimuat, langsung pakai tombol join di bawah.", icon=":material/warning:")
+
+        st.write("##")
+        st.markdown(render_icon(ICON_EKSTERNAL, margin_bottom=2), unsafe_allow_html=True)
+        st.link_button("JOIN WHATSAPP GROUP", WHATSAPP_GROUP_LINK, use_container_width=True)
 
 # ==================== MENU QUEUE (REDESIGN) ====================
 elif st.session_state.menu_pilihan == 'Queue':
@@ -927,7 +1005,8 @@ elif st.session_state.menu_pilihan == 'Queue':
         st.warning("Belum ada data queue.")
     else:
         now_playing = queue_data[0]
-        inisial = now_playing["name"][0].upper() if now_playing["name"] != "-" else "?"
+        nama_now = now_playing["name"] or "-"
+        inisial = nama_now[0].upper() if nama_now not in ("-", "") else "?"
 
         now_playing_html = f"""
         <div class="now-playing-card">
@@ -944,7 +1023,8 @@ elif st.session_state.menu_pilihan == 'Queue':
         st.markdown("<p style='font-family:Rajdhani; color:#00f2ff; letter-spacing:1px; font-size:0.9rem;'>UP NEXT</p>", unsafe_allow_html=True)
 
         for idx, item in enumerate(queue_data[1:], start=1):
-            inisial_item = item["name"][0].upper() if item["name"] != "-" else "?"
+            nama_item = item["name"] or "-"
+            inisial_item = nama_item[0].upper() if nama_item not in ("-", "") else "?"
             row_html = f"""
             <div class="queue-row">
                 <div class="rank-badge">{idx}</div>
