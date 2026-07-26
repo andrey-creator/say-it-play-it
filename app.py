@@ -81,6 +81,7 @@ ICON_WHATSAPP = '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" str
 ICON_BUKU = '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>'
 ICON_MUSIK_KECIL = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00f3ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px; margin-right:4px; filter: drop-shadow(0px 0px 4px #0055ff) drop-shadow(0px 0px 8px #00a2ff);"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>'
 ICON_REFRESH = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00f3ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px; margin-right:4px; filter: drop-shadow(0px 0px 4px #0055ff) drop-shadow(0px 0px 8px #00a2ff);"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>'
+ICON_CHAIRPERSON = '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14v2H5v-2z"/></svg>'
 
 
 def render_icon(svg, color="#00f2ff", margin_bottom=8):
@@ -1472,15 +1473,28 @@ elif st.session_state.menu_pilihan == 'Tentang':
 
         st.write("##")
 
+        ICONS = {
+    "CHAIRPERSON": '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14v2H5v-2z"/></svg>',
+    "VICE CHAIRPERSON": '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+    "ENGLISH TUTOR": '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="13" y2="11"/></svg>',
+    "SECRETARY": '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>',
+    "TREASURER": '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg>'
+}
+
         p_cols = st.columns(2)
         for idx, orang in enumerate(data_pengurus):
             nama_tampil = orang['nama'] if orang['nama'] != "-" else "Unfilled"
+
+            jabatan_key = orang['jabatan'].upper().strip()
+
             with p_cols[idx % 2]:
                 st.markdown(f"""
-                    <div class="ec-card">
-                        <h4 style="font-family:'Rajdhani'; color:#00f2ff; margin-bottom:6px; letter-spacing:1px; font-size:0.8rem;">{orang['jabatan'].upper()}</h4>
-                        <p style="font-family:'Rajdhani'; color:white; font-size:1rem; margin:0; font-weight:600;">{nama_tampil}</p>
-                    </div>
+            <div class="ec-card">
+                <h4 style="font-family:'Rajdhani'; color:#00f2ff; margin-bottom:6px; letter-spacing:1px; font-size:0.8rem; display:flex; align-items:center; gap:6px;">
+                    <span>{jabatan_key}</span>
+                </h4>
+                <p style="font-family:'Rajdhani'; color:white; font-size:1rem; margin:0; font-weight:600;">{nama_tampil}</p>
+            </div>
                 """, unsafe_allow_html=True)
 
 
