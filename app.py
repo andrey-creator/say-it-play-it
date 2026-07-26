@@ -1,11 +1,18 @@
 import csv
 import io
+import logging
 from datetime import datetime
 
 import streamlit as st
 import streamlit.components.v1 as components
 import requests
 from urllib.parse import unquote
+
+# ==================== LOGGING ====================
+# Errors are logged for diagnostics but never surfaced to the user as raw
+# tracebacks - the user always gets a friendly fallback message/data instead.
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 DAFTAR_BATCH = ["batch-2025-2026", "batch-2026-2027"]
 
@@ -19,6 +26,7 @@ DATA_DEMO_EKSKUL_FALLBACK = {
 }
 
 GALERI_PER_PAGE = 12
+QUEUE_PER_PAGE = 10
 
 
 EVENT_BERIKUTNYA_FALLBACK = {
@@ -74,8 +82,10 @@ ICON_BUKU = '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke=
 ICON_MUSIK_KECIL = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00f3ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px; margin-right:4px; filter: drop-shadow(0px 0px 4px #0055ff) drop-shadow(0px 0px 8px #00a2ff);"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>'
 ICON_REFRESH = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00f3ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px; margin-right:4px; filter: drop-shadow(0px 0px 4px #0055ff) drop-shadow(0px 0px 8px #00a2ff);"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>'
 
+
 def render_icon(svg, color="#00f2ff", margin_bottom=8):
-    return f'<div style="display:flex;justify-content:center;color:{color};margin-bottom:{margin_bottom}px;">{svg}</div>'
+    return f'<div class="ec-button-icon" style="color:{color};margin-bottom:{margin_bottom}px;">{svg}</div>'
+
 
 st.set_page_config(
     page_title="English Club SMAN 1 Depok",
@@ -146,6 +156,7 @@ def get_photos_from_github(folder_path):
         elif response.status_code == 403:
             remaining = response.headers.get("X-RateLimit-Remaining")
             if remaining == "0":
+                logger.warning("GitHub API rate limit reached for folder '%s'", folder_path)
                 if has_token:
                     st.sidebar.error("GitHub API rate limit reached. Please try again shortly.", icon=":material/error:")
                 else:
@@ -155,19 +166,38 @@ def get_photos_from_github(folder_path):
                         icon=":material/error:"
                     )
             else:
+                logger.warning("GitHub API access denied (403) for folder '%s'", folder_path)
                 st.sidebar.error("Access to the GitHub API was denied (403). Check the token/permissions.", icon=":material/error:")
         elif response.status_code == 404:
             # Folder doesn't exist yet / no photos for this batch — not an error, just return []
             pass
         else:
+            logger.warning("GitHub API returned status %s for folder '%s'", response.status_code, folder_path)
             st.sidebar.error(f"GitHub API Error: {response.status_code}", icon=":material/error:")
     except requests.exceptions.Timeout:
+        logger.exception("Connection to GitHub timed out for folder '%s'", folder_path)
         st.sidebar.warning("Connection to GitHub timed out. Please refresh and try again.", icon=":material/warning:")
     except requests.exceptions.RequestException as e:
+        logger.exception("Failed to connect to GitHub for folder '%s'", folder_path)
         st.sidebar.warning(f"Failed to connect to GitHub: {e}", icon=":material/warning:")
-    except Exception as e:
-        st.sidebar.warning(f"Unexpected error while fetching photos: {e}", icon=":material/warning:")
+    except Exception:
+        logger.exception("Unexpected error while fetching photos for folder '%s'", folder_path)
+        st.sidebar.warning("Unexpected error while fetching photos.", icon=":material/warning:")
     return []
+
+
+@st.cache_data(ttl=3600)
+def get_total_photos():
+    """
+    Cached total photo count across all batches. Reuses the already-cached
+    get_photos_from_github() calls, and is itself cached for a longer TTL so
+    that repeatedly opening the About Us page doesn't trigger extra GitHub
+    API requests.
+    """
+    total = 0
+    for batch in DAFTAR_BATCH:
+        total += len(get_photos_from_github(f"activity/{batch}"))
+    return total
 
 
 @st.cache_data(ttl=3600)
@@ -179,6 +209,7 @@ def get_demo_data_from_sheet():
     try:
         response = requests.get(csv_url, timeout=10)
         if response.status_code != 200:
+            logger.warning("Demo sheet returned status %s", response.status_code)
             st.toast("Failed to fetch demo data from the Sheet, using fallback data.", icon=":material/warning:")
             return DATA_DEMO_EKSKUL_FALLBACK
 
@@ -196,9 +227,11 @@ def get_demo_data_from_sheet():
         return data
 
     except requests.exceptions.RequestException:
+        logger.exception("Failed to connect to the Google Sheet (demo)")
         st.toast("Failed to connect to the Google Sheet, using fallback data.", icon=":material/warning:")
         return DATA_DEMO_EKSKUL_FALLBACK
     except Exception:
+        logger.exception("Demo data format in the Sheet is invalid")
         st.toast("Demo data format in the Sheet is invalid, using fallback data.", icon=":material/warning:")
         return DATA_DEMO_EKSKUL_FALLBACK
 
@@ -218,6 +251,7 @@ def get_event_from_sheet():
     try:
         response = requests.get(csv_url, timeout=10)
         if response.status_code != 200:
+            logger.warning("Event sheet returned status %s", response.status_code)
             st.sidebar.warning("Failed to fetch event data from the Sheet, using fallback data.", icon=":material/warning:")
             return EVENT_BERIKUTNYA_FALLBACK
 
@@ -249,9 +283,11 @@ def get_event_from_sheet():
         return {"nama": terpilih["nama"], "tanggal": terpilih["tanggal"]}
 
     except requests.exceptions.RequestException:
+        logger.exception("Failed to connect to the Google Sheet (event)")
         st.sidebar.warning("Failed to connect to the Google Sheet (event), using fallback data.", icon=":material/warning:")
         return EVENT_BERIKUTNYA_FALLBACK
     except Exception:
+        logger.exception("Event data format in the Sheet is invalid")
         st.sidebar.warning("Event data format in the Sheet is invalid, using fallback data.", icon=":material/warning:")
         return EVENT_BERIKUTNYA_FALLBACK
 
@@ -270,6 +306,7 @@ def get_pengurus_from_sheet():
     try:
         response = requests.get(csv_url, timeout=10)
         if response.status_code != 200:
+            logger.warning("Committee sheet returned status %s", response.status_code)
             st.toast("Failed to fetch committee data from the Sheet, using fallback data.", icon=":material/warning:")
             return DATA_PENGURUS_FALLBACK
 
@@ -305,9 +342,11 @@ def get_pengurus_from_sheet():
         return [{"nama": d["nama"], "jabatan": d["jabatan"]} for d in data]
 
     except requests.exceptions.RequestException:
+        logger.exception("Failed to connect to the Google Sheet (committee)")
         st.toast("Failed to connect to the Google Sheet (committee), using fallback data.", icon=":material/warning:")
         return DATA_PENGURUS_FALLBACK
     except Exception:
+        logger.exception("Committee data format in the Sheet is invalid")
         st.toast("Committee data format in the Sheet is invalid, using fallback data.", icon=":material/warning:")
         return DATA_PENGURUS_FALLBACK
 
@@ -324,6 +363,7 @@ def get_wotd_from_sheet():
     try:
         response = requests.get(csv_url, timeout=10)
         if response.status_code != 200:
+            logger.warning("WOTD sheet returned status %s", response.status_code)
             st.toast("Failed to fetch Word of the Day from the Sheet, using fallback data.", icon=":material/warning:")
             return WOTD_FALLBACK
 
@@ -358,15 +398,22 @@ def get_wotd_from_sheet():
         return daftar[hari_ke_n % len(daftar)]
 
     except requests.exceptions.RequestException:
+        logger.exception("Failed to connect to the Google Sheet (WOTD)")
         st.toast("Failed to connect to the Google Sheet (WOTD), using fallback data.", icon=":material/warning:")
         return WOTD_FALLBACK
     except Exception:
+        logger.exception("Word of the Day data format in the Sheet is invalid")
         st.toast("Word of the Day data format in the Sheet is invalid, using fallback data.", icon=":material/warning:")
         return WOTD_FALLBACK
 
 
 @st.cache_data(ttl=60)
 def get_queue_from_sheet():
+    """
+    Fetch the full song request queue from a Google Sheet. Returns every row
+    found - pagination for the UI is handled separately so the whole sheet
+    can be read without truncating it to a fixed number of entries.
+    """
     csv_url = st.secrets.get("QUEUE_SHEET_CSV_URL")
     if not csv_url:
         return []
@@ -374,6 +421,7 @@ def get_queue_from_sheet():
     try:
         response = requests.get(csv_url, timeout=10)
         if response.status_code != 200:
+            logger.warning("Queue sheet returned status %s", response.status_code)
             return []
 
         raw_text = response.text.lstrip('\ufeff')
@@ -405,9 +453,13 @@ def get_queue_from_sheet():
                 "song": lagu,
             })
 
-        return data[:20]
+        return data
 
+    except requests.exceptions.RequestException:
+        logger.exception("Failed to connect to the Google Sheet (queue)")
+        return []
     except Exception:
+        logger.exception("Unexpected error while parsing queue data from the Sheet")
         return []
 
 
@@ -435,6 +487,10 @@ def tampilkan_lightbox(img_url, caption):
             if downloaded:
                 st.toast("Photo downloaded successfully!", icon=":material/check_circle:")
         except requests.exceptions.RequestException:
+            logger.exception("Failed to prepare photo for download: %s", img_url)
+            st.warning("Failed to prepare the file for download.", icon=":material/warning:")
+        except Exception:
+            logger.exception("Unexpected error while preparing photo download: %s", img_url)
             st.warning("Failed to prepare the file for download.", icon=":material/warning:")
 
     with col_share:
@@ -480,6 +536,10 @@ if 'angkatan_demo' not in st.session_state:
     st.session_state.angkatan_demo = DAFTAR_BATCH[0]
 if 'galeri_page' not in st.session_state:
     st.session_state.galeri_page = 0
+if 'galeri_search' not in st.session_state:
+    st.session_state.galeri_search = ""
+if 'queue_page' not in st.session_state:
+    st.session_state.queue_page = 0
 if 'simple_mode' not in st.session_state:
     st.session_state.simple_mode = False
 
@@ -517,9 +577,44 @@ if st.query_params.get("kiosk") == "1":
       </div>
     </div>
     <script>
-      const gambarList = {gambar_kiosk};
+      let gambarList = {gambar_kiosk};
       let idx = 0;
       const el = document.getElementById("kiosk-img");
+      const daftarBatch = {DAFTAR_BATCH};
+
+      // Periodically re-fetch the photo list directly from GitHub so new
+      // uploads show up without needing to restart or reload the kiosk
+      // page. This runs entirely in the browser, so it doesn't trigger a
+      // Streamlit rerun and won't interrupt or flicker the running
+      // slideshow - only the underlying photo list is swapped in place.
+      async function refreshKioskPhotos() {{
+        try {{
+          let semuaBaru = [];
+          for (const batch of daftarBatch) {{
+            const res = await fetch(`https://api.github.com/repos/andrey-creator/say-it-play-it/contents/photos/activity/${{batch}}`);
+            if (!res.ok) continue;
+            const files = await res.json();
+            if (Array.isArray(files)) {{
+              const urls = files
+                .filter(f => /\\.(png|jpe?g|webp)$/i.test(f.name))
+                .map(f => f.download_url)
+                .reverse();
+              semuaBaru = semuaBaru.concat(urls);
+            }}
+          }}
+          if (semuaBaru.length > 0) {{
+            gambarList = semuaBaru;
+            if (idx >= gambarList.length) idx = 0;
+          }}
+        }} catch (err) {{
+          console.log("Kiosk photo refresh failed, keeping current list", err);
+        }}
+      }}
+
+      // Refresh the photo list roughly every 5 minutes (matches the
+      // server-side cache TTL), independent from the 6s slideshow timer.
+      setInterval(refreshKioskPhotos, 300000);
+
       setInterval(() => {{
           idx = (idx + 1) % gambarList.length;
           el.style.opacity = 0;
@@ -615,6 +710,41 @@ st.markdown("""
         letter-spacing: 1px;
         padding-top: 8px;
     }
+
+    /* ===== Reusable utility classes (reduce repeated inline styles) ===== */
+    .ec-title {
+        text-align: center;
+        color: #00f2ff;
+        font-family: 'Orbitron', sans-serif;
+    }
+    .ec-subtitle {
+        text-align: center;
+        font-family: 'Rajdhani', sans-serif;
+        color: white;
+        font-size: 1rem;
+        max-width: 600px;
+        margin: 0 auto 20px auto;
+    }
+    .ec-text {
+        font-family: 'Rajdhani', sans-serif;
+        color: white;
+    }
+    .ec-muted {
+        font-family: 'Rajdhani', sans-serif;
+        color: #aaaaaa;
+    }
+    .ec-card, .ec-stat-card {
+        padding: 20px;
+        border: 1px solid rgba(0, 242, 255, 0.3);
+        border-radius: 10px;
+        background: rgba(0, 242, 255, 0.02);
+        margin-bottom: 15px;
+        text-align: center;
+    }
+    .ec-button-icon {
+        display: flex;
+        justify-content: center;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -645,7 +775,7 @@ if st.session_state.simple_mode:
             color: #eeeeee !important;
             transform: none !important;
         }
-        .demo-card {
+        .demo-card, .ec-card, .ec-stat-card {
             border: 1px solid #444444 !important;
             background: #1a1a1a !important;
         }
@@ -822,9 +952,9 @@ elif st.session_state.menu_pilihan == 'Request':
         tombol_dashboard()
 
     st.markdown(render_icon(ICON_MUSIK, margin_bottom=10), unsafe_allow_html=True)
-    st.markdown("<h2 style='text-align:center; color:#00f2ff; font-family:Orbitron;'>REQUEST SONG</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 class='ec-title'>REQUEST SONG</h2>", unsafe_allow_html=True)
     st.markdown("""
-        <p style="text-align:center; font-family:'Rajdhani'; color:white; font-size:1rem; max-width:600px; margin:0 auto 20px auto;">
+        <p class="ec-subtitle">
             Want your favorite song played? Fill out the form below!
         </p>
     """, unsafe_allow_html=True)
@@ -833,6 +963,7 @@ elif st.session_state.menu_pilihan == 'Request':
     try:
         components.iframe(request_form_url, height=900, scrolling=True)
     except Exception:
+        logger.exception("Failed to embed the request form iframe")
         st.warning("The form couldn't be embedded here — please use the button below instead.", icon=":material/warning:")
     st.markdown(render_icon(ICON_EKSTERNAL, margin_bottom=2), unsafe_allow_html=True)
     st.link_button("OPEN FORM IN A NEW TAB", request_form_url, use_container_width=True)
@@ -844,9 +975,9 @@ elif st.session_state.menu_pilihan == 'Feedback':
         tombol_dashboard()
 
     st.markdown(render_icon(ICON_FEEDBACK, margin_bottom=10), unsafe_allow_html=True)
-    st.markdown("<h2 style='text-align:center; color:#00f2ff; font-family:Orbitron;'>FEEDBACK</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 class='ec-title'>FEEDBACK</h2>", unsafe_allow_html=True)
     st.markdown("""
-        <p style="text-align:center; font-family:'Rajdhani'; color:white; font-size:1rem; max-width:600px; margin:0 auto 20px auto;">
+        <p class="ec-subtitle">
             Have suggestions or feedback for English Club? Share it with us using the form below.
         </p>
     """, unsafe_allow_html=True)
@@ -855,6 +986,7 @@ elif st.session_state.menu_pilihan == 'Feedback':
     try:
         components.iframe(feedback_form_url, height=900, scrolling=True)
     except Exception:
+        logger.exception("Failed to embed the feedback form iframe")
         st.warning("The form couldn't be embedded here — please use the button below instead.", icon=":material/warning:")
     st.markdown(render_icon(ICON_EKSTERNAL, margin_bottom=2), unsafe_allow_html=True)
     st.link_button("OPEN FORM IN A NEW TAB", feedback_form_url, use_container_width=True)
@@ -866,25 +998,26 @@ elif st.session_state.menu_pilihan == 'WhatsApp':
         tombol_dashboard()
 
     st.markdown(render_icon(ICON_WHATSAPP, margin_bottom=10), unsafe_allow_html=True)
-    st.markdown("<h2 style='text-align:center; color:#00f2ff; font-family:Orbitron;'>WHATSAPP GROUP</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 class='ec-title'>WHATSAPP GROUP</h2>", unsafe_allow_html=True)
 
     _, col_wa, _ = st.columns([1, 1, 1])
     with col_wa:
         st.markdown("""
-            <p style="text-align:center; font-family:'Rajdhani'; color:white; font-size:1rem; margin-bottom:20px;">
+            <p class="ec-subtitle">
                 Scan the QR code or tap the button below to join the English Club WhatsApp group.
             </p>
         """, unsafe_allow_html=True)
         try:
             st.image(WHATSAPP_QR_IMAGE_URL, use_container_width=True)
         except Exception:
+            logger.exception("Failed to load WhatsApp QR image")
             st.warning("The QR code couldn't be loaded — use the join button below instead.", icon=":material/warning:")
 
         st.write("##")
         st.markdown(render_icon(ICON_EKSTERNAL, margin_bottom=2), unsafe_allow_html=True)
         st.link_button("JOIN WHATSAPP GROUP", WHATSAPP_GROUP_LINK, use_container_width=True)
 
-# ==================== QUEUE MENU (REDESIGNED) ====================
+# ==================== QUEUE MENU (REDESIGNED + PAGINATED) ====================
 elif st.session_state.menu_pilihan == 'Queue':
     _, cb, _ = st.columns([2, 1, 2])
     with cb:
@@ -1004,20 +1137,27 @@ elif st.session_state.menu_pilihan == 'Queue':
     </style>
     """, unsafe_allow_html=True)
 
-    st.markdown("<h2 style='text-align:center; color:#00f2ff; font-family:Orbitron;'>SONG QUEUE [20 Previews]</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 class='ec-title'>SONG QUEUE</h2>", unsafe_allow_html=True)
 
-    if st.button("Refresh Queue"):
-        get_queue_from_sheet.clear()
-        st.rerun()
+    col_refresh, col_count = st.columns([1, 2])
+    with col_refresh:
+        if st.button("Refresh Queue"):
+            get_queue_from_sheet.clear()
+            st.session_state.queue_page = 0
+            st.rerun()
 
     queue_data = get_queue_from_sheet()
 
     if not queue_data:
         st.warning("No queue data yet.")
     else:
+        with col_count:
+            st.markdown(
+                f"<p class='ec-muted' style='padding-top:8px;'>{len(queue_data)} song(s) in the queue</p>",
+                unsafe_allow_html=True
+            )
+
         now_playing = queue_data[0]
-        nama_now = now_playing["name"] or "-"
-        inisial = nama_now[0].upper() if nama_now not in ("-", "") else "?"
 
         now_playing_html = f"""
         <div class="now-playing-card">
@@ -1031,22 +1171,55 @@ elif st.session_state.menu_pilihan == 'Queue':
         """
         st.markdown(now_playing_html, unsafe_allow_html=True)
 
-        st.markdown("<p style='font-family:Rajdhani; color:#00f2ff; letter-spacing:1px; font-size:0.9rem;'>UP NEXT</p>", unsafe_allow_html=True)
+        upcoming = queue_data[1:]
 
-        for idx, item in enumerate(queue_data[1:], start=1):
-            nama_item = item["name"] or "-"
-            inisial_item = nama_item[0].upper() if nama_item not in ("-", "") else "?"
-            row_html = f"""
-            <div class="queue-row">
-                <div class="rank-badge">{idx}</div>
-                <div class="avatar-badge">{inisial_item}</div>
-                <div class="queue-info">
-                    <p class="song">{item['song']}</p>
-                    <p class="meta">{item['name']} · {item['class']}</p>
+        st.markdown("<p class='ec-muted' style='letter-spacing:1px; font-size:0.9rem;'>UP NEXT</p>", unsafe_allow_html=True)
+
+        if not upcoming:
+            st.info("No one else in the queue yet.")
+        else:
+            total_pages = max(1, (len(upcoming) - 1) // QUEUE_PER_PAGE + 1)
+            # Guard against a stored page number being out of range (e.g. if
+            # the queue got shorter since the last visit).
+            st.session_state.queue_page = min(st.session_state.queue_page, total_pages - 1)
+
+            start = st.session_state.queue_page * QUEUE_PER_PAGE
+            end = start + QUEUE_PER_PAGE
+            upcoming_page = upcoming[start:end]
+
+            for idx, item in enumerate(upcoming_page, start=start + 1):
+                nama_item = item["name"] or "-"
+                inisial_item = nama_item[0].upper() if nama_item not in ("-", "") else "?"
+                row_html = f"""
+                <div class="queue-row">
+                    <div class="rank-badge">{idx}</div>
+                    <div class="avatar-badge">{inisial_item}</div>
+                    <div class="queue-info">
+                        <p class="song">{item['song']}</p>
+                        <p class="meta">{item['name']} · {item['class']}</p>
+                    </div>
                 </div>
-            </div>
-            """
-            st.markdown(row_html, unsafe_allow_html=True)
+                """
+                st.markdown(row_html, unsafe_allow_html=True)
+
+            if total_pages > 1:
+                st.write("##")
+                p_prev, p_info, p_next = st.columns([1, 2, 1])
+                with p_prev:
+                    st.markdown(render_icon(ICON_BACK, margin_bottom=2), unsafe_allow_html=True)
+                    if st.button("PREV", use_container_width=True, disabled=st.session_state.queue_page == 0, key="queue_prev"):
+                        st.session_state.queue_page -= 1
+                        st.rerun()
+                with p_info:
+                    st.markdown(
+                        f"<p class='page-indicator'>PAGE {st.session_state.queue_page + 1} / {total_pages}</p>",
+                        unsafe_allow_html=True
+                    )
+                with p_next:
+                    st.markdown(render_icon(ICON_NEXT, margin_bottom=2), unsafe_allow_html=True)
+                    if st.button("NEXT", use_container_width=True, disabled=st.session_state.queue_page >= total_pages - 1, key="queue_next"):
+                        st.session_state.queue_page += 1
+                        st.rerun()
 
 # ==================== GALLERY MENU ====================
 elif st.session_state.menu_pilihan == 'Galeri':
@@ -1054,7 +1227,7 @@ elif st.session_state.menu_pilihan == 'Galeri':
     with cb:
         tombol_dashboard()
 
-    st.markdown("<h2 style='text-align:center; color:#00f2ff; font-family:Orbitron;'>GALLERY</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 class='ec-title'>GALLERY</h2>", unsafe_allow_html=True)
 
     if st.session_state.sub_menu_galeri is None:
         _, col_galeri, _ = st.columns([1, 2, 1])
@@ -1066,6 +1239,7 @@ elif st.session_state.menu_pilihan == 'Galeri':
                     st.session_state.sub_menu_galeri = "activity"
                     st.session_state.angkatan_pilihan = DAFTAR_BATCH[0]
                     st.session_state.galeri_page = 0
+                    st.session_state.galeri_search = ""
                     st.rerun()
             with g2:
                 st.markdown(render_icon(ICON_USERS), unsafe_allow_html=True)
@@ -1077,6 +1251,7 @@ elif st.session_state.menu_pilihan == 'Galeri':
             st.markdown(render_icon(ICON_BACK, margin_bottom=2), unsafe_allow_html=True)
             if st.button("BACK TO CATEGORIES"):
                 st.session_state.sub_menu_galeri = None
+                st.session_state.galeri_search = ""
                 st.rerun()
 
         with c_select:
@@ -1092,6 +1267,20 @@ elif st.session_state.menu_pilihan == 'Galeri':
 
         path_pencarian = f"{st.session_state.sub_menu_galeri}/{st.session_state.angkatan_pilihan}"
 
+        _, col_search, _ = st.columns([1, 2, 1])
+        with col_search:
+            st.markdown(render_icon(ICON_SEARCH, margin_bottom=2), unsafe_allow_html=True)
+            search_query = st.text_input(
+                "Search photos",
+                value=st.session_state.galeri_search,
+                placeholder="Search by photo name (e.g. demo day, meeting)...",
+                label_visibility="collapsed",
+                key="galeri_search_input",
+            )
+            if search_query != st.session_state.galeri_search:
+                st.session_state.galeri_search = search_query
+                st.session_state.galeri_page = 0
+
         st.write("##")
 
         skeleton_slot = st.empty()
@@ -1103,6 +1292,15 @@ elif st.session_state.menu_pilihan == 'Galeri':
 
         images = get_photos_from_github(path_pencarian)
         skeleton_slot.empty()
+
+        # Search filters photo file names before pagination is applied, so
+        # page numbers/counts always reflect the filtered result set.
+        search_term = st.session_state.galeri_search.strip().lower()
+        if search_term:
+            def _cocok_pencarian(url):
+                nama_file = unquote(url.split('/')[-1].rsplit('.', 1)[0]).lower().replace('-', ' ').replace('_', ' ')
+                return search_term in nama_file
+            images = [img for img in images if _cocok_pencarian(img)]
 
         if images:
             total_pages = max(1, (len(images) - 1) // GALERI_PER_PAGE + 1)
@@ -1145,7 +1343,10 @@ elif st.session_state.menu_pilihan == 'Galeri':
                         st.session_state.galeri_page += 1
                         st.rerun()
         else:
-            st.warning("No files found in this category.")
+            if search_term:
+                st.warning(f"No photos found matching \"{st.session_state.galeri_search.strip()}\".")
+            else:
+                st.warning("No files found in this category.")
 
 # ==================== CLUB DEMO MENU ====================
 elif st.session_state.menu_pilihan == 'Demo':
@@ -1153,7 +1354,7 @@ elif st.session_state.menu_pilihan == 'Demo':
     with cb:
         tombol_dashboard()
 
-    st.markdown("<h2 style='text-align:center; color:#00f2ff; font-family:Orbitron; margin-bottom:20px;'>CLUB DEMO</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 class='ec-title' style='margin-bottom:20px;'>CLUB DEMO</h2>", unsafe_allow_html=True)
 
     _, c_select_demo, _ = st.columns([2, 1, 2])
     with c_select_demo:
@@ -1178,13 +1379,14 @@ elif st.session_state.menu_pilihan == 'Demo':
         if item_siap:
             for item in item_siap:
                 st.markdown(f"""
-                    <div class="demo-card">
+                    <div class="ec-card">
                         <h4 style="font-family: 'Rajdhani'; color: white; margin-bottom: 15px; letter-spacing: 1px;">{item['judul'].upper()}</h4>
                     </div>
                 """, unsafe_allow_html=True)
                 try:
                     st.video(item['url'])
                 except Exception:
+                    logger.exception("Failed to embed demo video: %s", item['url'])
                     st.warning("This video can't be embedded — use the direct link below instead.")
                 st.markdown(render_icon(ICON_EKSTERNAL, margin_bottom=2), unsafe_allow_html=True)
                 st.link_button("OPEN IN YOUTUBE", item['url'], use_container_width=True)
@@ -1192,9 +1394,9 @@ elif st.session_state.menu_pilihan == 'Demo':
 
         if item_belum_siap > 0:
             st.markdown(f"""
-                <div class="demo-card" style="opacity: 0.5;">
+                <div class="ec-card" style="opacity: 0.5;">
                     <h4 style="font-family: 'Rajdhani'; color: #00f2ff; margin-bottom: 5px; letter-spacing: 1px;">COMING SOON</h4>
-                    <p style="font-family: 'Rajdhani'; color: white; font-size: 0.85rem; margin: 0;">{item_belum_siap} demo video(s) haven't been uploaded</p>
+                    <p class="ec-text" style="font-size: 0.85rem; margin: 0;">{item_belum_siap} demo video(s) haven't been uploaded</p>
                 </div>
             """, unsafe_allow_html=True)
 
@@ -1208,19 +1410,19 @@ elif st.session_state.menu_pilihan == 'WOTD':
         tombol_dashboard()
 
     st.markdown(render_icon(ICON_BUKU, margin_bottom=10), unsafe_allow_html=True)
-    st.markdown("<h2 style='text-align:center; color:#00f2ff; font-family:Orbitron;'>WORD OF THE DAY</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 class='ec-title'>WORD OF THE DAY</h2>", unsafe_allow_html=True)
 
     st.write("##")
     _, col_wotd, _ = st.columns([1, 2, 1])
     with col_wotd:
         wotd = get_wotd_from_sheet()
         st.markdown(f"""
-            <div class="demo-card" style="text-align:center;">
+            <div class="ec-card" style="text-align:center;">
                 <h1 style="font-family:'Orbitron'; color:white; font-size:2rem; margin-bottom:4px;">{wotd['kata']}</h1>
                 <p style="font-family:'Rajdhani'; color:#00f2ff; font-style:italic; font-size:1rem; margin-bottom:16px;">
                     {wotd.get('pengucapan', '')} · {wotd.get('jenis_kata', '')}
                 </p>
-                <p style="font-family:'Rajdhani'; color:white; font-size:1.1rem; margin-bottom:16px;">
+                <p class="ec-text" style="font-size:1.1rem; margin-bottom:16px;">
                     <strong>Meaning:</strong> {wotd.get('arti', '-')}
                 </p>
                 <p style="font-family:'Rajdhani'; color:#dddddd; font-size:1rem; font-style:italic;">
@@ -1236,9 +1438,9 @@ elif st.session_state.menu_pilihan == 'Tentang':
         tombol_dashboard()
 
     st.markdown(render_icon(ICON_USERS, margin_bottom=10), unsafe_allow_html=True)
-    st.markdown("<h2 style='text-align:center; color:#00f2ff; font-family:Orbitron; margin-bottom:10px;'>ABOUT US</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 class='ec-title' style='margin-bottom:10px;'>ABOUT US</h2>", unsafe_allow_html=True)
     st.markdown("""
-        <p style="text-align:center; font-family:'Rajdhani'; color:white; font-size:1rem; max-width:600px; margin:0 auto 30px auto;">
+        <p class="ec-subtitle" style="margin-bottom:30px;">
             English Club SMAN 1 Depok is an extra-curricular society where students sharpen their English language skills through discussions, presentations, debates, broadcasting, and a host of other fun activities.
         </p>
     """, unsafe_allow_html=True)
@@ -1247,23 +1449,22 @@ elif st.session_state.menu_pilihan == 'Tentang':
     with col_pengurus:
         data_pengurus = get_pengurus_from_sheet()
 
-
         total_pengurus_terisi = sum(1 for o in data_pengurus if o['nama'] != "-")
-        total_foto_semua_batch = sum(
-            len(get_photos_from_github(f"activity/{batch}")) for batch in DAFTAR_BATCH
-        )
+        # Uses the cached get_total_photos() helper instead of recomputing
+        # the photo count on every visit to this page.
+        total_foto_semua_batch = get_total_photos()
 
         s1, s2 = st.columns(2)
         with s1:
             st.markdown(f"""
-                <div class="demo-card">
+                <div class="ec-stat-card">
                     <h4 style="font-family:'Rajdhani'; color:#00f2ff; margin-bottom:6px; letter-spacing:1px; font-size:0.8rem;">TOTAL PHOTOS</h4>
                     <p style="font-family:'Orbitron'; color:white; font-size:1.6rem; margin:0; font-weight:700;">{total_foto_semua_batch}</p>
                 </div>
             """, unsafe_allow_html=True)
         with s2:
             st.markdown(f"""
-                <div class="demo-card">
+                <div class="ec-stat-card">
                     <h4 style="font-family:'Rajdhani'; color:#00f2ff; margin-bottom:6px; letter-spacing:1px; font-size:0.8rem;">COMMITTEE POSITIONS FILLED</h4>
                     <p style="font-family:'Orbitron'; color:white; font-size:1.6rem; margin:0; font-weight:700;">{total_pengurus_terisi}/{len(data_pengurus)}</p>
                 </div>
@@ -1276,7 +1477,7 @@ elif st.session_state.menu_pilihan == 'Tentang':
             nama_tampil = orang['nama'] if orang['nama'] != "-" else "Unfilled"
             with p_cols[idx % 2]:
                 st.markdown(f"""
-                    <div class="demo-card">
+                    <div class="ec-card">
                         <h4 style="font-family:'Rajdhani'; color:#00f2ff; margin-bottom:6px; letter-spacing:1px; font-size:0.8rem;">{orang['jabatan'].upper()}</h4>
                         <p style="font-family:'Rajdhani'; color:white; font-size:1rem; margin:0; font-weight:600;">{nama_tampil}</p>
                     </div>
