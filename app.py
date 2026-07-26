@@ -28,6 +28,12 @@ DATA_DEMO_EKSKUL_FALLBACK = {
 GALERI_PER_PAGE = 12
 QUEUE_PER_PAGE = 10
 
+# How often the Kiosk Mode photo list is allowed to refresh itself, in
+# seconds. Kept in one place so the cache TTL for photos and the kiosk
+# refresh cadence stay in sync (see get_all_activity_photos() and the
+# Kiosk Mode section below).
+KIOSK_REFRESH_SECONDS = 300
+
 
 EVENT_BERIKUTNYA_FALLBACK = {
     "nama": "NEXT DEMO DAY",
@@ -220,18 +226,30 @@ def get_photos_from_github(folder_path):
     return []
 
 
+# ---- PERFORMANCE: centralized photo source (Task #1) ----
+# All three consumers of the "activity" gallery (Gallery page, About Us
+# stats, Kiosk Mode) used to independently loop over DAFTAR_BATCH and call
+# get_photos_from_github() themselves. Streamlit's cache already dedupes the
+# actual GitHub request per folder/TTL, but funneling every caller through
+# one function keeps the fetch pattern in a single, obvious place and makes
+# it trivial to reuse the same in-memory result within one script run
+# (instead of rebuilding the same dict three times in three different
+# call-sites, as the previous kiosk-only helper used to do).
+@st.cache_data(ttl=300)
+def get_all_activity_photos():
+    """Photo URLs for every batch of the 'activity' gallery, in one place."""
+    return {batch: get_photos_from_github(f"activity/{batch}") for batch in DAFTAR_BATCH}
+
+
 @st.cache_data(ttl=3600)
 def get_total_photos():
     """
-    Cached total photo count across all batches. Reuses the already-cached
-    get_photos_from_github() calls, and is itself cached for a longer TTL so
-    that repeatedly opening the About Us page doesn't trigger extra GitHub
-    API requests.
+    Cached total photo count across all batches. Reuses
+    get_all_activity_photos() (itself backed by the per-folder GitHub
+    cache), so repeatedly opening the About Us page never triggers extra
+    GitHub API requests.
     """
-    total = 0
-    for batch in DAFTAR_BATCH:
-        total += len(get_photos_from_github(f"activity/{batch}"))
-    return total
+    return sum(len(v) for v in get_all_activity_photos().values())
 
 
 @st.cache_data(ttl=3600)
@@ -506,26 +524,43 @@ def tampilkan_lightbox(img_url, caption):
     col_dl, col_share = st.columns(2)
 
     with col_dl:
-        try:
-            img_bytes = requests.get(img_url, timeout=10).content
+        # ---- PERFORMANCE: lazy download (Task #2) ----
+        # The photo used to be re-downloaded from GitHub the instant this
+        # dialog opened, even if the user never clicked "Download". Now the
+        # bytes are only fetched once the user presses "Prepare Download",
+        # and the result is cached in session_state so re-rendering the
+        # dialog (e.g. after that click) doesn't fetch it a second time.
+        st.markdown(render_icon(ICON_DOWNLOAD, margin_bottom=2), unsafe_allow_html=True)
+        cache_key = f"dl_bytes::{img_url}"
+        img_bytes = st.session_state.get(cache_key)
+
+        if img_bytes is None:
+            if st.button("Prepare Download", key=f"prep_{img_url}", use_container_width=True):
+                try:
+                    img_bytes = requests.get(img_url, timeout=10).content
+                    st.session_state[cache_key] = img_bytes
+                except requests.exceptions.RequestException:
+                    logger.exception("Failed to prepare photo for download: %s", img_url)
+                    st.warning("Failed to prepare the file for download.", icon=":material/warning:")
+                    img_bytes = None
+                except Exception:
+                    logger.exception("Unexpected error while preparing photo download: %s", img_url)
+                    st.warning("Failed to prepare the file for download.", icon=":material/warning:")
+                    img_bytes = None
+
+        if img_bytes:
             file_ext = img_url.split('/')[-1].rsplit('.', 1)[-1] if '.' in img_url.split('/')[-1] else 'jpg'
             file_name = (caption or "photo").replace(' ', '_').lower() + f".{file_ext}"
-            st.markdown(render_icon(ICON_DOWNLOAD, margin_bottom=2), unsafe_allow_html=True)
             downloaded = st.download_button(
                 "Download Photo",
                 data=img_bytes,
                 file_name=file_name,
                 mime=f"image/{file_ext}",
-                use_container_width=True
+                use_container_width=True,
+                key=f"dl_{img_url}"
             )
             if downloaded:
                 st.toast("Photo downloaded successfully!", icon=":material/check_circle:")
-        except requests.exceptions.RequestException:
-            logger.exception("Failed to prepare photo for download: %s", img_url)
-            st.warning("Failed to prepare the file for download.", icon=":material/warning:")
-        except Exception:
-            logger.exception("Unexpected error while preparing photo download: %s", img_url)
-            st.warning("Failed to prepare the file for download.", icon=":material/warning:")
 
     with col_share:
         st.markdown(render_icon(ICON_EKSTERNAL, margin_bottom=2), unsafe_allow_html=True)
@@ -588,78 +623,64 @@ if st.query_params.get("kiosk") == "1":
         </style>
     """, unsafe_allow_html=True)
 
-    def get_semua_foto_galeri():
-        semua = []
-        for batch in DAFTAR_BATCH:
-            semua.extend(get_photos_from_github(f"activity/{batch}"))
-        return semua
+    gambar_awal = []
+    for daftar_foto in get_all_activity_photos().values():
+        gambar_awal.extend(daftar_foto)
 
-    gambar_kiosk = get_semua_foto_galeri()
-
-    if not gambar_kiosk:
+    if not gambar_awal:
         st.warning("There are no photos to display in kiosk mode yet.")
         st.stop()
 
-    kiosk_html = f"""
-    <div style="position:relative; width:100%; height:100vh; background:#000000; overflow:hidden;">
-      <img id="kiosk-img" src="{gambar_kiosk[0]}"
-           style="width:100%; height:100%; object-fit:contain; transition:opacity 1s ease-in-out; opacity:1;">
-      <div style="position:absolute; bottom:24px; left:0; right:0; text-align:center;
-                  font-family:'Orbitron', sans-serif; color:#00f2ff; letter-spacing:3px;
-                  text-shadow:0 0 10px #00f2ff; font-size:1rem;">
-        ENGLISH CLUB • SMAN 1 DEPOK
-      </div>
-    </div>
-    <script>
-      let gambarList = {gambar_kiosk};
-      let idx = 0;
-      const el = document.getElementById("kiosk-img");
-      const daftarBatch = {DAFTAR_BATCH};
+    # ---- PERFORMANCE: Kiosk Mode refresh (Task #4) ----
+    # Previously the slideshow ran a JS loop that called the GitHub
+    # Contents API *directly from every kiosk browser*, unauthenticated,
+    # every 5 minutes - completely bypassing the server-side cache above
+    # and multiplying GitHub requests by however many kiosk screens were
+    # open, forever. That's replaced with an @st.fragment that reruns on
+    # its own schedule (independent from the rest of the app) and simply
+    # re-reads get_all_activity_photos(), which is already cached for
+    # KIOSK_REFRESH_SECONDS. As long as that cache is warm, a refresh costs
+    # zero additional GitHub requests, no matter how many kiosk displays
+    # are running.
+    @st.fragment(run_every=KIOSK_REFRESH_SECONDS)
+    def render_kiosk_slideshow():
+        gambar_kiosk = []
+        for daftar_foto in get_all_activity_photos().values():
+            gambar_kiosk.extend(daftar_foto)
+        if not gambar_kiosk:
+            gambar_kiosk = gambar_awal  # keep showing the last known photos
 
-      // Periodically re-fetch the photo list directly from GitHub so new
-      // uploads show up without needing to restart or reload the kiosk
-      // page. This runs entirely in the browser, so it doesn't trigger a
-      // Streamlit rerun and won't interrupt or flicker the running
-      // slideshow - only the underlying photo list is swapped in place.
-      async function refreshKioskPhotos() {{
-        try {{
-          let semuaBaru = [];
-          for (const batch of daftarBatch) {{
-            const res = await fetch(`https://api.github.com/repos/andrey-creator/say-it-play-it/contents/photos/activity/${{batch}}`);
-            if (!res.ok) continue;
-            const files = await res.json();
-            if (Array.isArray(files)) {{
-              const urls = files
-                .filter(f => /\\.(png|jpe?g|webp)$/i.test(f.name))
-                .map(f => f.download_url)
-                .reverse();
-              semuaBaru = semuaBaru.concat(urls);
-            }}
-          }}
-          if (semuaBaru.length > 0) {{
-            gambarList = semuaBaru;
-            if (idx >= gambarList.length) idx = 0;
-          }}
-        }} catch (err) {{
-          console.log("Kiosk photo refresh failed, keeping current list", err);
-        }}
-      }}
+        kiosk_html = f"""
+        <div style="position:relative; width:100%; height:100vh; background:#000000; overflow:hidden;">
+          <img id="kiosk-img" src="{gambar_kiosk[0]}"
+               style="width:100%; height:100%; object-fit:contain; transition:opacity 1s ease-in-out; opacity:1;">
+          <div style="position:absolute; bottom:24px; left:0; right:0; text-align:center;
+                      font-family:'Orbitron', sans-serif; color:#00f2ff; letter-spacing:3px;
+                      text-shadow:0 0 10px #00f2ff; font-size:1rem;">
+            ENGLISH CLUB • SMAN 1 DEPOK
+          </div>
+        </div>
+        <script>
+          // The photo list is now handed in from the (cached) server side
+          // rather than re-fetched from GitHub in the browser - this
+          // script only runs the local 6s crossfade timer.
+          const gambarList = {gambar_kiosk};
+          let idx = 0;
+          const el = document.getElementById("kiosk-img");
 
-      // Refresh the photo list roughly every 5 minutes (matches the
-      // server-side cache TTL), independent from the 6s slideshow timer.
-      setInterval(refreshKioskPhotos, 300000);
+          setInterval(() => {{
+              idx = (idx + 1) % gambarList.length;
+              el.style.opacity = 0;
+              setTimeout(() => {{
+                  el.src = gambarList[idx];
+                  el.style.opacity = 1;
+              }}, 800);
+          }}, 6000);
+        </script>
+        """
+        components.html(kiosk_html, height=900)
 
-      setInterval(() => {{
-          idx = (idx + 1) % gambarList.length;
-          el.style.opacity = 0;
-          setTimeout(() => {{
-              el.src = gambarList[idx];
-              el.style.opacity = 1;
-          }}, 800);
-      }}, 6000);
-    </script>
-    """
-    components.html(kiosk_html, height=900)
+    render_kiosk_slideshow()
     st.stop()
 
 # Styling CSS (neon/default mode)
@@ -779,6 +800,52 @@ st.markdown("""
         display: flex;
         justify-content: center;
     }
+
+    /* ===== Task #5: classes extracted from previously-inline card styles ===== */
+    .ec-countdown-card {
+        font-family: 'Orbitron', sans-serif;
+        text-align: center;
+        padding: 16px;
+        border: 1px solid rgba(0, 242, 255, 0.35);
+        border-radius: 12px;
+        background: rgba(0, 242, 255, 0.05);
+        color: #ffffff;
+        margin-bottom: 20px;
+    }
+    .ec-countdown-label { font-size: 0.8rem; letter-spacing: 2px; color: #00f2ff; margin-bottom: 8px; }
+    .ec-countdown-timer { font-size: 1.5rem; font-weight: 700; letter-spacing: 1px; }
+    .ec-countdown-date {
+        font-family: 'Rajdhani', sans-serif;
+        font-size: 0.8rem;
+        letter-spacing: 1px;
+        color: #aaaaaa;
+        margin-top: 8px;
+    }
+    .ec-wotd-card {
+        font-family: 'Rajdhani', sans-serif;
+        text-align: center;
+        padding: 14px;
+        border: 1px solid rgba(0, 242, 255, 0.25);
+        border-radius: 12px;
+        background: rgba(0, 242, 255, 0.04);
+        color: #ffffff;
+        margin-bottom: 20px;
+    }
+    .ec-wotd-label { font-size: 0.7rem; letter-spacing: 2px; color: #00f2ff; font-family: 'Orbitron', sans-serif; }
+    .ec-wotd-word { font-size: 1.4rem; font-weight: 700; margin-top: 6px; }
+    .ec-wotd-meta { font-size: 0.85rem; color: #aaaaaa; font-style: italic; }
+    .ec-wotd-def { font-size: 0.95rem; color: #dddddd; margin-top: 6px; }
+    .ec-wotd-big { font-family: 'Orbitron'; color: white; font-size: 2rem; margin-bottom: 4px; }
+    .ec-wotd-pron { font-family: 'Rajdhani'; color: #00f2ff; font-style: italic; font-size: 1rem; margin-bottom: 16px; }
+    .ec-wotd-arti { font-size: 1.1rem; margin-bottom: 16px; }
+    .ec-wotd-example { font-family: 'Rajdhani'; color: #dddddd; font-size: 1rem; font-style: italic; }
+    .ec-stat-title { font-family: 'Rajdhani'; color: #00f2ff; margin-bottom: 6px; letter-spacing: 1px; font-size: 0.8rem; }
+    .ec-stat-value { font-family: 'Orbitron'; color: white; font-size: 1.6rem; margin: 0; font-weight: 700; }
+    .ec-role-title { font-family: 'Rajdhani'; color: #00f2ff; margin-bottom: 6px; letter-spacing: 1px; font-size: 0.8rem; }
+    .ec-role-name { font-family: 'Rajdhani'; color: white; font-size: 1rem; margin: 0; font-weight: 600; }
+    .ec-demo-title { font-family: 'Rajdhani'; color: white; margin-bottom: 15px; letter-spacing: 1px; }
+    .ec-demo-soon { opacity: 0.5; }
+    .ec-demo-soon-title { font-family: 'Rajdhani'; color: #00f2ff; margin-bottom: 5px; letter-spacing: 1px; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -875,15 +942,40 @@ if st.session_state.menu_pilihan == 'Home':
         except (ValueError, IndexError):
             tanggal_ramah = event_berikutnya['tanggal']
 
+        # NOTE: this card is rendered via components.html() (needed for the
+        # JS timer below), which puts it in its own <iframe> - it can't see
+        # the main page's <style> block, so the .ec-countdown-* classes
+        # need their own self-contained <style> here rather than relying on
+        # the central stylesheet (that's fine for cards rendered with plain
+        # st.markdown, like the WOTD card just below, but not for this one).
         countdown_html = f"""
-        <div style="font-family:'Orbitron', sans-serif; text-align:center; padding:16px;
-                    border:1px solid rgba(0, 242, 255, 0.35); border-radius:12px;
-                    background:rgba(0, 242, 255, 0.05); color:#ffffff; margin-bottom:20px;">
-          <div style="font-size:0.8rem; letter-spacing:2px; color:#00f2ff; margin-bottom:8px;">
+        <style>
+          .ec-countdown-card {{
+              font-family: 'Orbitron', sans-serif;
+              text-align: center;
+              padding: 16px;
+              border: 1px solid rgba(0, 242, 255, 0.35);
+              border-radius: 12px;
+              background: rgba(0, 242, 255, 0.05);
+              color: #ffffff;
+              box-sizing: border-box;
+          }}
+          .ec-countdown-label {{ font-size: 0.8rem; letter-spacing: 2px; color: #00f2ff; margin-bottom: 8px; }}
+          .ec-countdown-timer {{ font-size: 1.5rem; font-weight: 700; letter-spacing: 1px; }}
+          .ec-countdown-date {{
+              font-family: 'Rajdhani', sans-serif;
+              font-size: 0.8rem;
+              letter-spacing: 1px;
+              color: #aaaaaa;
+              margin-top: 8px;
+          }}
+        </style>
+        <div class="ec-countdown-card">
+          <div class="ec-countdown-label">
             {event_berikutnya['nama']}
           </div>
-          <div id="cd-timer" style="font-size:1.5rem; font-weight:700; letter-spacing:1px;">--D : --H : --M : --S</div>
-          <div style="font-family:'Rajdhani', sans-serif; font-size:0.8rem; letter-spacing:1px; color:#aaaaaa; margin-top:8px;">
+          <div id="cd-timer" class="ec-countdown-timer">--D : --H : --M : --S</div>
+          <div class="ec-countdown-date">
             {tanggal_ramah}
           </div>
         </div>
@@ -909,16 +1001,15 @@ if st.session_state.menu_pilihan == 'Home':
 
 
         wotd_home = get_wotd_from_sheet()
+        # Task #5: WOTD home-page card now uses .ec-wotd-* classes.
         wotd_card_html = f"""
-        <div style="font-family:'Rajdhani', sans-serif; text-align:center; padding:14px;
-                    border:1px solid rgba(0, 242, 255, 0.25); border-radius:12px;
-                    background:rgba(0, 242, 255, 0.04); color:#ffffff; margin-bottom:20px;">
-          <div style="font-size:0.7rem; letter-spacing:2px; color:#00f2ff; font-family:'Orbitron', sans-serif;">
+        <div class="ec-wotd-card">
+          <div class="ec-wotd-label">
             WORD OF THE DAY
           </div>
-          <div style="font-size:1.4rem; font-weight:700; margin-top:6px;">{wotd_home['kata']}</div>
-          <div style="font-size:0.85rem; color:#aaaaaa; font-style:italic;">{wotd_home.get('pengucapan', '')} · {wotd_home.get('jenis_kata', '')}</div>
-          <div style="font-size:0.95rem; color:#dddddd; margin-top:6px;">{wotd_home.get('arti', '')}</div>
+          <div class="ec-wotd-word">{wotd_home['kata']}</div>
+          <div class="ec-wotd-meta">{wotd_home.get('pengucapan', '')} · {wotd_home.get('jenis_kata', '')}</div>
+          <div class="ec-wotd-def">{wotd_home.get('arti', '')}</div>
         </div>
         """
         st.markdown(wotd_card_html, unsafe_allow_html=True)
@@ -1212,6 +1303,10 @@ elif st.session_state.menu_pilihan == 'Queue':
         if not upcoming:
             st.info("No one else in the queue yet.")
         else:
+            # ---- Gallery/Queue pagination audit (Task #3) ----
+            # Only the current page's slice is ever built into HTML below
+            # (upcoming[start:end]) - the rest of the queue is never
+            # rendered, regardless of how many entries the sheet has.
             total_pages = max(1, (len(upcoming) - 1) // QUEUE_PER_PAGE + 1)
             # Guard against a stored page number being out of range (e.g. if
             # the queue got shorter since the last visit).
@@ -1324,6 +1419,10 @@ elif st.session_state.menu_pilihan == 'Galeri':
                 with skel_cols[i % 3]:
                     st.markdown('<div class="skeleton-box"></div>', unsafe_allow_html=True)
 
+        # Reuses the shared, cached per-batch fetch - selecting a batch that
+        # was already loaded elsewhere in the app (e.g. via
+        # get_all_activity_photos on the About Us / Kiosk pages) costs no
+        # extra GitHub request.
         images = get_photos_from_github(path_pencarian)
         skeleton_slot.empty()
 
@@ -1337,6 +1436,11 @@ elif st.session_state.menu_pilihan == 'Galeri':
             images = [img for img in images if _cocok_pencarian(img)]
 
         if images:
+            # ---- Gallery rendering audit (Task #3) ----
+            # Confirmed: only `images_page` (the current page's slice) is
+            # ever turned into st.image()/HTML below - even with hundreds
+            # or thousands of matching photos, everything outside the
+            # active page is skipped entirely rather than rendered hidden.
             total_pages = max(1, (len(images) - 1) // GALERI_PER_PAGE + 1)
             # Guard against a stored page number being out of range
             # (e.g. if the photo count went down since the last visit).
@@ -1412,9 +1516,11 @@ elif st.session_state.menu_pilihan == 'Demo':
 
         if item_siap:
             for item in item_siap:
+                # Task #5: demo card title now uses .ec-demo-title instead
+                # of an inline style attribute.
                 st.markdown(f"""
                     <div class="ec-card">
-                        <h4 style="font-family: 'Rajdhani'; color: white; margin-bottom: 15px; letter-spacing: 1px;">{item['judul'].upper()}</h4>
+                        <h4 class="ec-demo-title">{item['judul'].upper()}</h4>
                     </div>
                 """, unsafe_allow_html=True)
                 try:
@@ -1428,8 +1534,8 @@ elif st.session_state.menu_pilihan == 'Demo':
 
         if item_belum_siap > 0:
             st.markdown(f"""
-                <div class="ec-card" style="opacity: 0.5;">
-                    <h4 style="font-family: 'Rajdhani'; color: #00f2ff; margin-bottom: 5px; letter-spacing: 1px;">COMING SOON</h4>
+                <div class="ec-card ec-demo-soon">
+                    <h4 class="ec-demo-soon-title">COMING SOON</h4>
                     <p class="ec-text" style="font-size: 0.85rem; margin: 0;">{item_belum_siap} demo video(s) haven't been uploaded</p>
                 </div>
             """, unsafe_allow_html=True)
@@ -1450,16 +1556,18 @@ elif st.session_state.menu_pilihan == 'WOTD':
     _, col_wotd, _ = st.columns([1, 2, 1])
     with col_wotd:
         wotd = get_wotd_from_sheet()
+        # Task #5: full WOTD card now uses .ec-wotd-big / .ec-wotd-pron /
+        # .ec-wotd-arti / .ec-wotd-example instead of inline styles.
         st.markdown(f"""
             <div class="ec-card" style="text-align:center;">
-                <h1 style="font-family:'Orbitron'; color:white; font-size:2rem; margin-bottom:4px;">{wotd['kata']}</h1>
-                <p style="font-family:'Rajdhani'; color:#00f2ff; font-style:italic; font-size:1rem; margin-bottom:16px;">
+                <h1 class="ec-wotd-big">{wotd['kata']}</h1>
+                <p class="ec-wotd-pron">
                     {wotd.get('pengucapan', '')} · {wotd.get('jenis_kata', '')}
                 </p>
-                <p class="ec-text" style="font-size:1.1rem; margin-bottom:16px;">
+                <p class="ec-text ec-wotd-arti">
                     <strong>Meaning:</strong> {wotd.get('arti', '-')}
                 </p>
-                <p style="font-family:'Rajdhani'; color:#dddddd; font-size:1rem; font-style:italic;">
+                <p class="ec-wotd-example">
                     "{wotd.get('contoh', '-')}"
                 </p>
             </div>
@@ -1484,23 +1592,25 @@ elif st.session_state.menu_pilihan == 'Tentang':
         data_pengurus = get_pengurus_from_sheet()
 
         total_pengurus_terisi = sum(1 for o in data_pengurus if o['nama'] != "-")
-        # Uses the cached get_total_photos() helper instead of recomputing
-        # the photo count on every visit to this page.
+        # Uses the cached get_total_photos() -> get_all_activity_photos()
+        # chain instead of recomputing the photo count on every visit to
+        # this page, so no extra GitHub requests happen here.
         total_foto_semua_batch = get_total_photos()
 
         s1, s2 = st.columns(2)
         with s1:
+            # Task #5: stat cards now use .ec-stat-title / .ec-stat-value.
             st.markdown(f"""
                 <div class="ec-stat-card">
-                    <h4 style="font-family:'Rajdhani'; color:#00f2ff; margin-bottom:6px; letter-spacing:1px; font-size:0.8rem;">TOTAL PHOTOS</h4>
-                    <p style="font-family:'Orbitron'; color:white; font-size:1.6rem; margin:0; font-weight:700;">{total_foto_semua_batch}</p>
+                    <h4 class="ec-stat-title">TOTAL PHOTOS</h4>
+                    <p class="ec-stat-value">{total_foto_semua_batch}</p>
                 </div>
             """, unsafe_allow_html=True)
         with s2:
             st.markdown(f"""
                 <div class="ec-stat-card">
-                    <h4 style="font-family:'Rajdhani'; color:#00f2ff; margin-bottom:6px; letter-spacing:1px; font-size:0.8rem;">COMMITTEE POSITIONS FILLED</h4>
-                    <p style="font-family:'Orbitron'; color:white; font-size:1.6rem; margin:0; font-weight:700;">{total_pengurus_terisi}/{len(data_pengurus)}</p>
+                    <h4 class="ec-stat-title">COMMITTEE POSITIONS FILLED</h4>
+                    <p class="ec-stat-value">{total_pengurus_terisi}/{len(data_pengurus)}</p>
                 </div>
             """, unsafe_allow_html=True)
 
@@ -1511,11 +1621,12 @@ elif st.session_state.menu_pilihan == 'Tentang':
             nama_tampil = orang['nama'] if orang['nama'] != "-" else "Unfilled"
             icon_jabatan = get_icon_jabatan(orang['jabatan'])
             with p_cols[idx % 2]:
+                # Task #5: committee cards now use .ec-role-title / .ec-role-name.
                 st.markdown(f"""
                     <div class="ec-card">
                         {render_icon(icon_jabatan, margin_bottom=6)}
-                        <h4 style="font-family:'Rajdhani'; color:#00f2ff; margin-bottom:6px; letter-spacing:1px; font-size:0.8rem;">{orang['jabatan'].upper()}</h4>
-                        <p style="font-family:'Rajdhani'; color:white; font-size:1rem; margin:0; font-weight:600;">{nama_tampil}</p>
+                        <h4 class="ec-role-title">{orang['jabatan'].upper()}</h4>
+                        <p class="ec-role-name">{nama_tampil}</p>
                     </div>
                 """, unsafe_allow_html=True)
 
