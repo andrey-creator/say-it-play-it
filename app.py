@@ -74,13 +74,10 @@ ICON_NEXT = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke=
 ICON_KAMERA = '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>'
 ICON_SEARCH = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>'
 ICON_DOWNLOAD = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>'
-ICON_USER = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00f3ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0px 0px 5px #00a2ff) drop-shadow(0px 0px 10px #00d2ff);"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'
 ICON_EKSTERNAL = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>'
 ICON_MOON = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>'
 ICON_WHATSAPP = '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/><path d="M9 10a0.5 0.5 0 0 0 1 0"/><path d="M14 10a0.5 0.5 0 0 0 1 0"/><path d="M9 13c.5 1 1.5 1.5 3 1.5s2.5-.5 3-1.5"/></svg>'
 ICON_BUKU = '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>'
-ICON_MUSIK_KECIL = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00f3ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px; margin-right:4px; filter: drop-shadow(0px 0px 4px #0055ff) drop-shadow(0px 0px 8px #00a2ff);"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>'
-ICON_REFRESH = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00f3ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px; margin-right:4px; filter: drop-shadow(0px 0px 4px #0055ff) drop-shadow(0px 0px 8px #00a2ff);"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>'
 
 # ---- Committee (pengurus) role icons, used on the About Us page ----
 ICON_CROWN = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l4 4 5-7 5 7 4-4-2 10H5z"/><path d="M5 21h14"/></svg>'
@@ -112,7 +109,7 @@ def get_icon_jabatan(jabatan):
         return ICON_CLIPBOARD
     if any(k in j for k in ["treasurer", "bendahara"]):
         return ICON_WALLET
-    if any(k in j for k in ["public relation", "humas", "pr "]) or j.strip() == "pr":
+    if any(k in j for k in ["public relation", "humas"]) or j.strip() == "pr":
         return ICON_MEGAPHONE
     if any(k in j for k in ["event", "acara", "coordinator", "koordinator"]):
         return ICON_CALENDAR
@@ -136,9 +133,6 @@ st.set_page_config(
 
 # ==================== OPEN GRAPH META TAGS (BEST EFFORT) ====================
 def inject_og_tags():
-    """
-    -
-    """
     og_html = """
     <script>
         function setMeta(property, content) {
@@ -163,15 +157,60 @@ def inject_og_tags():
 inject_og_tags()
 
 
+# ==================== GENERIC SHEET-CSV FETCH HELPER ====================
+# Every "get_X_from_sheet" function used to repeat the same
+# fetch -> check status -> parse CSV -> fallback-on-any-error structure.
+# This collapses that into one helper: callers just supply the secrets key,
+# a row-parser, and a fallback value. Cuts ~100 lines of duplicated
+# try/except/logging boilerplate down to a handful of small parser
+# functions below.
+def _fetch_sheet_rows(secrets_key, row_parser, fallback, label):
+    """
+    Fetch a CSV published from Google Sheets and turn it into structured
+    data via row_parser(row_norm) -> item | None. Returns `fallback` if the
+    secret isn't configured, the request fails, or nothing usable is parsed.
+    row_norm has lowercase+stripped keys and stripped values.
+    """
+    csv_url = st.secrets.get(secrets_key)
+    if not csv_url:
+        return fallback
+
+    try:
+        response = requests.get(csv_url, timeout=10)
+        if response.status_code != 200:
+            logger.warning("%s sheet returned status %s", label, response.status_code)
+            st.toast(f"Failed to fetch {label} from the Sheet, using fallback data.", icon=":material/warning:")
+            return fallback
+
+        raw_text = response.text.lstrip('\ufeff')
+        reader = csv.DictReader(io.StringIO(raw_text))
+
+        results = []
+        for i, row in enumerate(reader):
+            row_norm = {(k or "").strip().lower(): (v or "").strip() for k, v in row.items()}
+            item = row_parser(row_norm, i)
+            if item is not None:
+                results.append(item)
+
+        return results if results else fallback
+
+    except requests.exceptions.RequestException:
+        logger.exception("Failed to connect to the Google Sheet (%s)", label)
+        st.toast(f"Failed to connect to the Google Sheet ({label}), using fallback data.", icon=":material/warning:")
+        return fallback
+    except Exception:
+        logger.exception("%s data format in the Sheet is invalid", label)
+        st.toast(f"{label} data format in the Sheet is invalid, using fallback data.", icon=":material/warning:")
+        return fallback
+
+
 @st.cache_data(ttl=300)
 def get_photos_from_github(folder_path):
     username = "andrey-creator"
     repo = "say-it-play-it"
     url = f"https://api.github.com/repos/{username}/{repo}/contents/photos/{folder_path}"
 
-    headers = {
-        "Accept": "application/vnd.github.v3+json"
-    }
+    headers = {"Accept": "application/vnd.github.v3+json"}
     has_token = "GITHUB_TOKEN" in st.secrets
     if has_token:
         headers["Authorization"] = f"token {st.secrets['GITHUB_TOKEN']}"
@@ -182,8 +221,8 @@ def get_photos_from_github(folder_path):
             files = response.json()
             if isinstance(files, list):
                 image_urls = [
-                    file['download_url'] for file in files
-                    if file['name'].lower().endswith(('png', 'jpg', 'jpeg', 'webp'))
+                    f['download_url'] for f in files
+                    if f['name'].lower().endswith(('png', 'jpg', 'jpeg', 'webp'))
                 ]
                 image_urls.reverse()
                 return image_urls
@@ -191,20 +230,15 @@ def get_photos_from_github(folder_path):
             remaining = response.headers.get("X-RateLimit-Remaining")
             if remaining == "0":
                 logger.warning("GitHub API rate limit reached for folder '%s'", folder_path)
-                if has_token:
-                    st.sidebar.error("GitHub API rate limit reached. Please try again shortly.", icon=":material/error:")
-                else:
-                    st.sidebar.error(
-                        "GitHub API rate limit reached (60 requests/hour without a token). "
-                        "Set GITHUB_TOKEN in secrets for a much higher limit (5000/hour).",
-                        icon=":material/error:"
-                    )
+                msg = ("GitHub API rate limit reached. Please try again shortly." if has_token else
+                       "GitHub API rate limit reached (60 requests/hour without a token). "
+                       "Set GITHUB_TOKEN in secrets for a much higher limit (5000/hour).")
+                st.sidebar.error(msg, icon=":material/error:")
             else:
                 logger.warning("GitHub API access denied (403) for folder '%s'", folder_path)
                 st.sidebar.error("Access to the GitHub API was denied (403). Check the token/permissions.", icon=":material/error:")
         elif response.status_code == 404:
-            # Folder doesn't exist yet / no photos for this batch — not an error, just return []
-            pass
+            pass  # Folder doesn't exist yet / no photos for this batch - not an error
         else:
             logger.warning("GitHub API returned status %s for folder '%s'", response.status_code, folder_path)
             st.sidebar.error(f"GitHub API Error: {response.status_code}", icon=":material/error:")
@@ -222,16 +256,8 @@ def get_photos_from_github(folder_path):
 
 @st.cache_data(ttl=3600)
 def get_total_photos():
-    """
-    Cached total photo count across all batches. Reuses the already-cached
-    get_photos_from_github() calls, and is itself cached for a longer TTL so
-    that repeatedly opening the About Us page doesn't trigger extra GitHub
-    API requests.
-    """
-    total = 0
-    for batch in DAFTAR_BATCH:
-        total += len(get_photos_from_github(f"activity/{batch}"))
-    return total
+    """Cached total photo count across all batches (reuses cached fetches)."""
+    return sum(len(get_photos_from_github(f"activity/{b}")) for b in DAFTAR_BATCH)
 
 
 @st.cache_data(ttl=3600)
@@ -240,6 +266,11 @@ def get_demo_data_from_sheet():
     if not csv_url:
         return DATA_DEMO_EKSKUL_FALLBACK
 
+    def parse(row_norm, _i):
+        return row_norm  # collected manually below, batch needs its own bucket
+
+    # This one buckets by batch column, so it can't use the generic list-based
+    # helper directly - kept as a light wrapper around the same fetch pattern.
     try:
         response = requests.get(csv_url, timeout=10)
         if response.status_code != 200:
@@ -256,9 +287,7 @@ def get_demo_data_from_sheet():
             if batch in data and judul and url:
                 data[batch].append({"judul": judul, "url": url})
 
-        if not any(data.values()):
-            return DATA_DEMO_EKSKUL_FALLBACK
-        return data
+        return data if any(data.values()) else DATA_DEMO_EKSKUL_FALLBACK
 
     except requests.exceptions.RequestException:
         logger.exception("Failed to connect to the Google Sheet (demo)")
@@ -272,229 +301,99 @@ def get_demo_data_from_sheet():
 
 @st.cache_data(ttl=300)
 def get_event_from_sheet():
-    """
-    Fetch the list of events from a Google Sheet (columns: nama, tanggal —
-    ISO format, e.g. 2026-09-05T09:00:00). Automatically picks the nearest
-    upcoming event. If secrets aren't set / the request fails / there's no
-    data, fall back to the default event.
-    """
-    csv_url = st.secrets.get("EVENT_SHEET_CSV_URL")
-    if not csv_url:
+    """Nearest upcoming event (columns: nama, tanggal - ISO format)."""
+    def parse(row_norm, _i):
+        nama = row_norm.get("nama", "")
+        tanggal_str = row_norm.get("tanggal", "")
+        if not nama or not tanggal_str:
+            return None
+        try:
+            return {"nama": nama, "tanggal": tanggal_str, "_dt": datetime.fromisoformat(tanggal_str)}
+        except ValueError:
+            return None
+
+    kandidat = _fetch_sheet_rows("EVENT_SHEET_CSV_URL", parse, None, "event")
+    if kandidat is None:
         return EVENT_BERIKUTNYA_FALLBACK
 
-    try:
-        response = requests.get(csv_url, timeout=10)
-        if response.status_code != 200:
-            logger.warning("Event sheet returned status %s", response.status_code)
-            st.sidebar.warning("Failed to fetch event data from the Sheet, using fallback data.", icon=":material/warning:")
-            return EVENT_BERIKUTNYA_FALLBACK
-
-        reader = csv.DictReader(io.StringIO(response.text))
-        kandidat = []
-        for row in reader:
-            nama = (row.get("nama") or "").strip()
-            tanggal_str = (row.get("tanggal") or "").strip()
-            if not nama or not tanggal_str:
-                continue
-            try:
-                tanggal_obj = datetime.fromisoformat(tanggal_str)
-            except ValueError:
-                continue
-            kandidat.append({"nama": nama, "tanggal": tanggal_str, "_dt": tanggal_obj})
-
-        if not kandidat:
-            return EVENT_BERIKUTNYA_FALLBACK
-
-        # Pick the nearest event that hasn't passed yet; if all of them have
-        # already passed, use the most recently passed one (so it's never empty).
-        sekarang = datetime.now()
-        akan_datang = sorted([k for k in kandidat if k["_dt"] >= sekarang], key=lambda k: k["_dt"])
-        if akan_datang:
-            terpilih = akan_datang[0]
-        else:
-            terpilih = sorted(kandidat, key=lambda k: k["_dt"])[-1]
-
-        return {"nama": terpilih["nama"], "tanggal": terpilih["tanggal"]}
-
-    except requests.exceptions.RequestException:
-        logger.exception("Failed to connect to the Google Sheet (event)")
-        st.sidebar.warning("Failed to connect to the Google Sheet (event), using fallback data.", icon=":material/warning:")
-        return EVENT_BERIKUTNYA_FALLBACK
-    except Exception:
-        logger.exception("Event data format in the Sheet is invalid")
-        st.sidebar.warning("Event data format in the Sheet is invalid, using fallback data.", icon=":material/warning:")
-        return EVENT_BERIKUTNYA_FALLBACK
+    sekarang = datetime.now()
+    akan_datang = sorted([k for k in kandidat if k["_dt"] >= sekarang], key=lambda k: k["_dt"])
+    terpilih = akan_datang[0] if akan_datang else sorted(kandidat, key=lambda k: k["_dt"])[-1]
+    return {"nama": terpilih["nama"], "tanggal": terpilih["tanggal"]}
 
 
 @st.cache_data(ttl=3600)
 def get_pengurus_from_sheet():
-    """
-    Fetch committee data from a Google Sheet (columns: nama, jabatan,
-    urutan [optional]). If secrets aren't set / the request fails / there's
-    no data, fall back to the default committee list.
-    """
-    csv_url = st.secrets.get("PENGURUS_SHEET_CSV_URL")
-    if not csv_url:
+    """Committee data (columns: nama, jabatan, urutan [optional])."""
+    def parse(row_norm, i):
+        nama = row_norm.get("nama", "")
+        jabatan = row_norm.get("jabatan", "")
+        if not nama or not jabatan:
+            return None
+        urutan_str = row_norm.get("urutan", "").replace(",", ".").strip()
+        try:
+            urutan = int(float(urutan_str)) if urutan_str else i
+        except ValueError:
+            urutan = i
+        return {"nama": nama, "jabatan": jabatan, "_urutan": urutan}
+
+    data = _fetch_sheet_rows("PENGURUS_SHEET_CSV_URL", parse, None, "committee")
+    if data is None:
         return DATA_PENGURUS_FALLBACK
 
-    try:
-        response = requests.get(csv_url, timeout=10)
-        if response.status_code != 200:
-            logger.warning("Committee sheet returned status %s", response.status_code)
-            st.toast("Failed to fetch committee data from the Sheet, using fallback data.", icon=":material/warning:")
-            return DATA_PENGURUS_FALLBACK
-
-        # Strip a BOM if present so the first header doesn't end up as '\ufeffnama'
-        raw_text = response.text.lstrip('\ufeff')
-        reader = csv.DictReader(io.StringIO(raw_text))
-
-        data = []
-        for i, row in enumerate(reader):
-            # Normalize keys: lowercase + strip, so 'Nama', ' urutan ', etc. still match
-            row_norm = {(k or "").strip().lower(): (v or "").strip() for k, v in row.items()}
-
-            nama = row_norm.get("nama", "")
-            jabatan = row_norm.get("jabatan", "")
-            urutan_str = row_norm.get("urutan", "")
-
-            if not nama or not jabatan:
-                continue
-
-            # Clean up common Sheets number formats (e.g. "1.0", "1,0", stray spaces)
-            urutan_str = urutan_str.replace(",", ".").strip()
-            try:
-                urutan = int(float(urutan_str)) if urutan_str else i
-            except ValueError:
-                urutan = i
-
-            data.append({"nama": nama, "jabatan": jabatan, "_urutan": urutan})
-
-        if not data:
-            return DATA_PENGURUS_FALLBACK
-
-        data.sort(key=lambda d: d["_urutan"])
-        return [{"nama": d["nama"], "jabatan": d["jabatan"]} for d in data]
-
-    except requests.exceptions.RequestException:
-        logger.exception("Failed to connect to the Google Sheet (committee)")
-        st.toast("Failed to connect to the Google Sheet (committee), using fallback data.", icon=":material/warning:")
-        return DATA_PENGURUS_FALLBACK
-    except Exception:
-        logger.exception("Committee data format in the Sheet is invalid")
-        st.toast("Committee data format in the Sheet is invalid, using fallback data.", icon=":material/warning:")
-        return DATA_PENGURUS_FALLBACK
+    data.sort(key=lambda d: d["_urutan"])
+    return [{"nama": d["nama"], "jabatan": d["jabatan"]} for d in data]
 
 
 @st.cache_data(ttl=3600)
 def get_wotd_from_sheet():
-    """
-    -
-    """
-    csv_url = st.secrets.get("WOTD_SHEET_CSV_URL")
-    if not csv_url:
+    def parse(row_norm, _i):
+        kata = row_norm.get("kata", "")
+        if not kata:
+            return None
+        return {
+            "tanggal": row_norm.get("tanggal", ""),
+            "kata": kata,
+            "pengucapan": row_norm.get("pengucapan", ""),
+            "arti": row_norm.get("arti", ""),
+            "jenis_kata": row_norm.get("jenis_kata", ""),
+            "contoh": row_norm.get("contoh", ""),
+        }
+
+    daftar = _fetch_sheet_rows("WOTD_SHEET_CSV_URL", parse, None, "Word of the Day")
+    if daftar is None:
         return WOTD_FALLBACK
 
-    try:
-        response = requests.get(csv_url, timeout=10)
-        if response.status_code != 200:
-            logger.warning("WOTD sheet returned status %s", response.status_code)
-            st.toast("Failed to fetch Word of the Day from the Sheet, using fallback data.", icon=":material/warning:")
-            return WOTD_FALLBACK
+    hari_ini_str = datetime.now().strftime("%Y-%m-%d")
+    cocok = [d for d in daftar if d["tanggal"] == hari_ini_str]
+    if cocok:
+        return cocok[0]
 
-        raw_text = response.text.lstrip('\ufeff')
-        reader = csv.DictReader(io.StringIO(raw_text))
-
-        daftar = []
-        for row in reader:
-            row_norm = {(k or "").strip().lower(): (v or "").strip() for k, v in row.items()}
-            kata = row_norm.get("kata", "")
-            if not kata:
-                continue
-            daftar.append({
-                "tanggal": row_norm.get("tanggal", ""),
-                "kata": kata,
-                "pengucapan": row_norm.get("pengucapan", ""),
-                "arti": row_norm.get("arti", ""),
-                "jenis_kata": row_norm.get("jenis_kata", ""),
-                "contoh": row_norm.get("contoh", ""),
-            })
-
-        if not daftar:
-            return WOTD_FALLBACK
-
-        hari_ini_str = datetime.now().strftime("%Y-%m-%d")
-        cocok = [d for d in daftar if d["tanggal"] == hari_ini_str]
-        if cocok:
-            return cocok[0]
-
-        # No matching date -> auto-rotate using the day-of-year number
-        hari_ke_n = datetime.now().timetuple().tm_yday
-        return daftar[hari_ke_n % len(daftar)]
-
-    except requests.exceptions.RequestException:
-        logger.exception("Failed to connect to the Google Sheet (WOTD)")
-        st.toast("Failed to connect to the Google Sheet (WOTD), using fallback data.", icon=":material/warning:")
-        return WOTD_FALLBACK
-    except Exception:
-        logger.exception("Word of the Day data format in the Sheet is invalid")
-        st.toast("Word of the Day data format in the Sheet is invalid, using fallback data.", icon=":material/warning:")
-        return WOTD_FALLBACK
+    hari_ke_n = datetime.now().timetuple().tm_yday
+    return daftar[hari_ke_n % len(daftar)]
 
 
 @st.cache_data(ttl=60)
 def get_queue_from_sheet():
-    """
-    Fetch the full song request queue from a Google Sheet. Returns every row
-    found - pagination for the UI is handled separately so the whole sheet
-    can be read without truncating it to a fixed number of entries.
-    """
-    csv_url = st.secrets.get("QUEUE_SHEET_CSV_URL")
-    if not csv_url:
-        return []
+    """Full song request queue - pagination is handled in the UI layer."""
+    def cari_kolom(row_norm, *kandidat_key):
+        for key in kandidat_key:
+            if key in row_norm:
+                return row_norm[key]
+        return ""
 
-    try:
-        response = requests.get(csv_url, timeout=10)
-        if response.status_code != 200:
-            logger.warning("Queue sheet returned status %s", response.status_code)
-            return []
+    def parse(row_norm_raw, _i):
+        # Extra normalization on top of the generic helper: strip a trailing
+        # colon from headers too (e.g. "Class:") since this sheet's headers
+        # are less consistent than the others.
+        row_norm = {k.rstrip(':').strip(): v for k, v in row_norm_raw.items()}
+        return {
+            "name": cari_kolom(row_norm, "full name/anonymous", "full name / anonymous", "name") or "-",
+            "class": cari_kolom(row_norm, "class") or "-",
+            "song": cari_kolom(row_norm, "song artist - tittle", "song artist - title", "song") or "-",
+        }
 
-        raw_text = response.text.lstrip('\ufeff')
-        reader = csv.DictReader(io.StringIO(raw_text))
-
-        # Normalize headers: lowercase + strip surrounding whitespace/punctuation
-        # so slightly mismatched sheet headers (extra spaces, different case,
-        # a trailing colon or not) still get read correctly.
-        def cari_kolom(row_norm, *kandidat_key):
-            for key in kandidat_key:
-                if key in row_norm:
-                    return row_norm[key]
-            return ""
-
-        data = []
-        for row in reader:
-            row_norm = {
-                (k or "").strip().lower().rstrip(':').strip(): (v or "").strip()
-                for k, v in row.items()
-            }
-
-            nama = cari_kolom(row_norm, "full name/anonymous", "full name / anonymous", "name") or "-"
-            kelas = cari_kolom(row_norm, "class") or "-"
-            lagu = cari_kolom(row_norm, "song artist - tittle", "song artist - title", "song") or "-"
-
-            data.append({
-                "name": nama,
-                "class": kelas,
-                "song": lagu,
-            })
-
-        return data
-
-    except requests.exceptions.RequestException:
-        logger.exception("Failed to connect to the Google Sheet (queue)")
-        return []
-    except Exception:
-        logger.exception("Unexpected error while parsing queue data from the Sheet")
-        return []
+    return _fetch_sheet_rows("QUEUE_SHEET_CSV_URL", parse, [], "queue")
 
 
 @st.dialog("Photo Preview", width="large")
@@ -506,26 +405,36 @@ def tampilkan_lightbox(img_url, caption):
     col_dl, col_share = st.columns(2)
 
     with col_dl:
-        try:
-            img_bytes = requests.get(img_url, timeout=10).content
-            file_ext = img_url.split('/')[-1].rsplit('.', 1)[-1] if '.' in img_url.split('/')[-1] else 'jpg'
-            file_name = (caption or "photo").replace(' ', '_').lower() + f".{file_ext}"
-            st.markdown(render_icon(ICON_DOWNLOAD, margin_bottom=2), unsafe_allow_html=True)
+        st.markdown(render_icon(ICON_DOWNLOAD, margin_bottom=2), unsafe_allow_html=True)
+        # Only fetch the full-res bytes once the user actually asks to
+        # download - avoids an eager request on every dialog open, which
+        # used to run regardless of whether "Download" was ever pressed.
+        if st.button("Prepare Download", use_container_width=True, key="prep_dl"):
+            try:
+                img_bytes = requests.get(img_url, timeout=10).content
+                file_ext = img_url.split('/')[-1].rsplit('.', 1)[-1] if '.' in img_url.split('/')[-1] else 'jpg'
+                file_name = (caption or "photo").replace(' ', '_').lower() + f".{file_ext}"
+                st.session_state["_lightbox_dl"] = (img_bytes, file_name, file_ext)
+            except requests.exceptions.RequestException:
+                logger.exception("Failed to prepare photo for download: %s", img_url)
+                st.warning("Failed to prepare the file for download.", icon=":material/warning:")
+            except Exception:
+                logger.exception("Unexpected error while preparing photo download: %s", img_url)
+                st.warning("Failed to prepare the file for download.", icon=":material/warning:")
+
+        prepared = st.session_state.get("_lightbox_dl")
+        if prepared:
+            img_bytes, file_name, file_ext = prepared
             downloaded = st.download_button(
                 "Download Photo",
                 data=img_bytes,
                 file_name=file_name,
                 mime=f"image/{file_ext}",
-                use_container_width=True
+                use_container_width=True,
             )
             if downloaded:
                 st.toast("Photo downloaded successfully!", icon=":material/check_circle:")
-        except requests.exceptions.RequestException:
-            logger.exception("Failed to prepare photo for download: %s", img_url)
-            st.warning("Failed to prepare the file for download.", icon=":material/warning:")
-        except Exception:
-            logger.exception("Unexpected error while preparing photo download: %s", img_url)
-            st.warning("Failed to prepare the file for download.", icon=":material/warning:")
+                del st.session_state["_lightbox_dl"]
 
     with col_share:
         st.markdown(render_icon(ICON_EKSTERNAL, margin_bottom=2), unsafe_allow_html=True)
@@ -616,11 +525,6 @@ if st.query_params.get("kiosk") == "1":
       const el = document.getElementById("kiosk-img");
       const daftarBatch = {DAFTAR_BATCH};
 
-      // Periodically re-fetch the photo list directly from GitHub so new
-      // uploads show up without needing to restart or reload the kiosk
-      // page. This runs entirely in the browser, so it doesn't trigger a
-      // Streamlit rerun and won't interrupt or flicker the running
-      // slideshow - only the underlying photo list is swapped in place.
       async function refreshKioskPhotos() {{
         try {{
           let semuaBaru = [];
@@ -645,8 +549,6 @@ if st.query_params.get("kiosk") == "1":
         }}
       }}
 
-      // Refresh the photo list roughly every 5 minutes (matches the
-      // server-side cache TTL), independent from the 6s slideshow timer.
       setInterval(refreshKioskPhotos, 300000);
 
       setInterval(() => {{
@@ -704,23 +606,14 @@ st.markdown("""
     }
 
     .img-label {
-        text-align: center; 
-        font-family: 'Rajdhani', sans-serif; 
-        color: #00f2ff; 
-        font-size: 0.85rem; 
-        margin-top: -10px; 
+        text-align: center;
+        font-family: 'Rajdhani', sans-serif;
+        color: #00f2ff;
+        font-size: 0.85rem;
+        margin-top: -10px;
         margin-bottom: 25px;
         letter-spacing: 1px;
         font-weight: 500;
-    }
-
-    .demo-card {
-        padding: 20px; 
-        border: 1px solid rgba(0, 242, 255, 0.3); 
-        border-radius: 10px; 
-        background: rgba(0, 242, 255, 0.02);
-        margin-bottom: 15px;
-        text-align: center;
     }
 
     .skeleton-box {
@@ -759,14 +652,9 @@ st.markdown("""
         max-width: 600px;
         margin: 0 auto 20px auto;
     }
-    .ec-text {
-        font-family: 'Rajdhani', sans-serif;
-        color: white;
-    }
-    .ec-muted {
-        font-family: 'Rajdhani', sans-serif;
-        color: #aaaaaa;
-    }
+    .ec-text { font-family: 'Rajdhani', sans-serif; color: white; }
+    .ec-muted { font-family: 'Rajdhani', sans-serif; color: #aaaaaa; }
+
     .ec-card, .ec-stat-card {
         padding: 20px;
         border: 1px solid rgba(0, 242, 255, 0.3);
@@ -775,10 +663,30 @@ st.markdown("""
         margin-bottom: 15px;
         text-align: center;
     }
-    .ec-button-icon {
-        display: flex;
-        justify-content: center;
+    /* Card-scoped typography so individual card blocks in Python no longer
+       need repeated inline font/color styles on every h4/p. */
+    .ec-card h4, .ec-stat-card h4 {
+        font-family: 'Rajdhani', sans-serif;
+        color: #00f2ff;
+        margin-bottom: 6px;
+        letter-spacing: 1px;
+        font-size: 0.9rem;
     }
+    .ec-card p, .ec-stat-card p {
+        font-family: 'Rajdhani', sans-serif;
+        color: white;
+        margin: 0;
+    }
+    .ec-stat-card .stat-value {
+        font-family: 'Orbitron', sans-serif;
+        color: white;
+        font-size: 1.6rem;
+        font-weight: 700;
+        margin: 0;
+    }
+    .ec-card.faded { opacity: 0.5; }
+
+    .ec-button-icon { display: flex; justify-content: center; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -786,18 +694,9 @@ st.markdown("""
 if st.session_state.simple_mode:
     st.markdown("""
         <style>
-        /* ===== SIMPLE MODE: turn off glow, shadows, heavy animations ===== */
-        .glow-text {
-            text-shadow: none !important;
-            color: #eeeeee !important;
-        }
-        .sub-text, .img-label, .page-indicator {
-            color: #999999 !important;
-            text-shadow: none !important;
-        }
-        .logo-img {
-            filter: none !important;
-        }
+        .glow-text { text-shadow: none !important; color: #eeeeee !important; }
+        .sub-text, .img-label, .page-indicator { color: #999999 !important; text-shadow: none !important; }
+        .logo-img { filter: none !important; }
         div.stButton > button, div.stLinkButton > a, div.stDownloadButton > button {
             border: 1px solid #666666 !important;
             color: #eeeeee !important;
@@ -809,23 +708,11 @@ if st.session_state.simple_mode:
             color: #eeeeee !important;
             transform: none !important;
         }
-        .demo-card, .ec-card, .ec-stat-card {
-            border: 1px solid #444444 !important;
-            background: #1a1a1a !important;
-        }
-        .demo-card h4 {
-            color: #cccccc !important;
-        }
-        .skeleton-box {
-            animation: none !important;
-            background: #222222 !important;
-        }
-        div[style*="text-shadow"] {
-            text-shadow: none !important;
-        }
-        div[style*="backdrop-filter"] {
-            backdrop-filter: none !important;
-        }
+        .ec-card, .ec-stat-card { border: 1px solid #444444 !important; background: #1a1a1a !important; }
+        .ec-card h4, .ec-stat-card h4 { color: #cccccc !important; }
+        .skeleton-box { animation: none !important; background: #222222 !important; }
+        div[style*="text-shadow"] { text-shadow: none !important; }
+        div[style*="backdrop-filter"] { backdrop-filter: none !important; }
         </style>
     """, unsafe_allow_html=True)
 
@@ -835,11 +722,41 @@ def set_page(name):
     st.session_state.sub_menu_galeri = None
 
 
-def tombol_dashboard():
-    st.markdown(render_icon(ICON_BACK, margin_bottom=2), unsafe_allow_html=True)
-    if st.button("DASHBOARD"):
-        set_page('Home')
-        st.rerun()
+def centered(ratio=(1, 2, 1)):
+    """Returns the middle column of a `st.columns(ratio)` split - collapses
+    the `_, col, _ = st.columns([...])` pattern repeated across every menu."""
+    cols = st.columns(list(ratio))
+    return cols[1]
+
+
+def render_menu_header():
+    """Back-to-dashboard button, centered - used at the top of every submenu."""
+    with centered((2, 1, 2)):
+        st.markdown(render_icon(ICON_BACK, margin_bottom=2), unsafe_allow_html=True)
+        if st.button("DASHBOARD"):
+            set_page('Home')
+            st.rerun()
+
+
+def render_pagination(state_key, total_pages, key_prefix=""):
+    """Prev/page-indicator/Next row shared by Gallery and Queue pagination."""
+    if total_pages <= 1:
+        return
+    st.write("##")
+    p_prev, p_info, p_next = st.columns([1, 2, 1])
+    current = st.session_state[state_key]
+    with p_prev:
+        st.markdown(render_icon(ICON_BACK, margin_bottom=2), unsafe_allow_html=True)
+        if st.button("PREV", use_container_width=True, disabled=current == 0, key=f"{key_prefix}_prev"):
+            st.session_state[state_key] -= 1
+            st.rerun()
+    with p_info:
+        st.markdown(f"<p class='page-indicator'>PAGE {current + 1} / {total_pages}</p>", unsafe_allow_html=True)
+    with p_next:
+        st.markdown(render_icon(ICON_NEXT, margin_bottom=2), unsafe_allow_html=True)
+        if st.button("NEXT", use_container_width=True, disabled=current >= total_pages - 1, key=f"{key_prefix}_next"):
+            st.session_state[state_key] += 1
+            st.rerun()
 
 
 if st.session_state.menu_pilihan == 'Home':
@@ -858,12 +775,8 @@ st.markdown(f"""
 
 # ==================== HOME MENU ====================
 if st.session_state.menu_pilihan == 'Home':
-    _, col_center, _ = st.columns([1, 2, 1])
-    with col_center:
-
-
+    with centered():
         event_berikutnya = get_event_from_sheet()
-
 
         NAMA_BULAN = [
             "", "January", "February", "March", "April", "May", "June",
@@ -907,7 +820,6 @@ if st.session_state.menu_pilihan == 'Home':
         """
         components.html(countdown_html, height=155)
 
-
         wotd_home = get_wotd_from_sheet()
         wotd_card_html = f"""
         <div style="font-family:'Rajdhani', sans-serif; text-align:center; padding:14px;
@@ -923,53 +835,25 @@ if st.session_state.menu_pilihan == 'Home':
         """
         st.markdown(wotd_card_html, unsafe_allow_html=True)
 
-        c1, c2 = st.columns(2)
-        with c1:
-            st.markdown(render_icon(ICON_GALERI), unsafe_allow_html=True)
-            if st.button("EC GALLERY", key="btn_galeri", use_container_width=True):
-                set_page('Galeri')
-                st.rerun()
-        with c2:
-            st.markdown(render_icon(ICON_MUSIK), unsafe_allow_html=True)
-            if st.button("REQUEST SONG", key="btn_req", use_container_width=True):
-                set_page('Request')
-                st.rerun()
-
-        c3, c4 = st.columns(2)
-        with c3:
-            st.markdown(render_icon(ICON_ANTRIAN), unsafe_allow_html=True)
-            if st.button("QUEUE", key="btn_queue", use_container_width=True):
-                set_page('Queue')
-                st.rerun()
-        with c4:
-            st.markdown(render_icon(ICON_FEEDBACK), unsafe_allow_html=True)
-            if st.button("FEEDBACK", key="btn_feed", use_container_width=True):
-                set_page('Feedback')
-                st.rerun()
-
-        c5, c6 = st.columns(2)
-        with c5:
-            st.markdown(render_icon(ICON_ROKET), unsafe_allow_html=True)
-            if st.button("CLUB DEMO", key="btn_demo", use_container_width=True):
-                set_page('Demo')
-                st.rerun()
-        with c6:
-            st.markdown(render_icon(ICON_USERS), unsafe_allow_html=True)
-            if st.button("ABOUT US", key="btn_tentang", use_container_width=True):
-                set_page('Tentang')
-                st.rerun()
-
-        c7, c8 = st.columns(2)
-        with c7:
-            st.markdown(render_icon(ICON_WHATSAPP), unsafe_allow_html=True)
-            if st.button("WHATSAPP GROUP", key="btn_wa", use_container_width=True):
-                set_page('WhatsApp')
-                st.rerun()
-        with c8:
-            st.markdown(render_icon(ICON_BUKU), unsafe_allow_html=True)
-            if st.button("WORD OF THE DAY", key="btn_wotd", use_container_width=True):
-                set_page('WOTD')
-                st.rerun()
+        home_buttons = [
+            (ICON_GALERI, "EC GALLERY", "btn_galeri", "Galeri"),
+            (ICON_MUSIK, "REQUEST SONG", "btn_req", "Request"),
+            (ICON_ANTRIAN, "QUEUE", "btn_queue", "Queue"),
+            (ICON_FEEDBACK, "FEEDBACK", "btn_feed", "Feedback"),
+            (ICON_ROKET, "CLUB DEMO", "btn_demo", "Demo"),
+            (ICON_USERS, "ABOUT US", "btn_tentang", "Tentang"),
+            (ICON_WHATSAPP, "WHATSAPP GROUP", "btn_wa", "WhatsApp"),
+            (ICON_BUKU, "WORD OF THE DAY", "btn_wotd", "WOTD"),
+        ]
+        for i in range(0, len(home_buttons), 2):
+            pair = home_buttons[i:i + 2]
+            cols = st.columns(2)
+            for col, (icon, label, key, target_page) in zip(cols, pair):
+                with col:
+                    st.markdown(render_icon(icon), unsafe_allow_html=True)
+                    if st.button(label, key=key, use_container_width=True):
+                        set_page(target_page)
+                        st.rerun()
 
         st.markdown("""
             <div style="text-align: center; margin-top: 40px; padding: 20px; border-top: 1px solid rgba(0, 242, 255, 0.2);">
@@ -981,17 +865,10 @@ if st.session_state.menu_pilihan == 'Home':
 
 # ==================== REQUEST SONG MENU ====================
 elif st.session_state.menu_pilihan == 'Request':
-    _, cb, _ = st.columns([2, 1, 2])
-    with cb:
-        tombol_dashboard()
-
+    render_menu_header()
     st.markdown(render_icon(ICON_MUSIK, margin_bottom=10), unsafe_allow_html=True)
     st.markdown("<h2 class='ec-title'>REQUEST SONG</h2>", unsafe_allow_html=True)
-    st.markdown("""
-        <p class="ec-subtitle">
-            Want your favorite song played? Fill out the form below!
-        </p>
-    """, unsafe_allow_html=True)
+    st.markdown('<p class="ec-subtitle">Want your favorite song played? Fill out the form below!</p>', unsafe_allow_html=True)
 
     request_form_url = st.secrets.get("REQUEST_FORM_URL", REQUEST_FORM_URL_DEFAULT)
     try:
@@ -1004,17 +881,10 @@ elif st.session_state.menu_pilihan == 'Request':
 
 # ==================== FEEDBACK MENU ====================
 elif st.session_state.menu_pilihan == 'Feedback':
-    _, cb, _ = st.columns([2, 1, 2])
-    with cb:
-        tombol_dashboard()
-
+    render_menu_header()
     st.markdown(render_icon(ICON_FEEDBACK, margin_bottom=10), unsafe_allow_html=True)
     st.markdown("<h2 class='ec-title'>FEEDBACK</h2>", unsafe_allow_html=True)
-    st.markdown("""
-        <p class="ec-subtitle">
-            Have suggestions or feedback for English Club? Share it with us using the form below.
-        </p>
-    """, unsafe_allow_html=True)
+    st.markdown('<p class="ec-subtitle">Have suggestions or feedback for English Club? Share it with us using the form below.</p>', unsafe_allow_html=True)
 
     feedback_form_url = st.secrets.get("FEEDBACK_FORM_URL", FEEDBACK_FORM_URL_DEFAULT)
     try:
@@ -1027,20 +897,12 @@ elif st.session_state.menu_pilihan == 'Feedback':
 
 # ==================== WHATSAPP GROUP MENU ====================
 elif st.session_state.menu_pilihan == 'WhatsApp':
-    _, cb, _ = st.columns([2, 1, 2])
-    with cb:
-        tombol_dashboard()
-
+    render_menu_header()
     st.markdown(render_icon(ICON_WHATSAPP, margin_bottom=10), unsafe_allow_html=True)
     st.markdown("<h2 class='ec-title'>WHATSAPP GROUP</h2>", unsafe_allow_html=True)
 
-    _, col_wa, _ = st.columns([1, 1, 1])
-    with col_wa:
-        st.markdown("""
-            <p class="ec-subtitle">
-                Scan the QR code or tap the button below to join the English Club WhatsApp group.
-            </p>
-        """, unsafe_allow_html=True)
+    with centered((1, 1, 1)):
+        st.markdown('<p class="ec-subtitle">Scan the QR code or tap the button below to join the English Club WhatsApp group.</p>', unsafe_allow_html=True)
         try:
             st.image(WHATSAPP_QR_IMAGE_URL, use_container_width=True)
         except Exception:
@@ -1053,121 +915,48 @@ elif st.session_state.menu_pilihan == 'WhatsApp':
 
 # ==================== QUEUE MENU (REDESIGNED + PAGINATED) ====================
 elif st.session_state.menu_pilihan == 'Queue':
-    _, cb, _ = st.columns([2, 1, 2])
-    with cb:
-        tombol_dashboard()
-
+    render_menu_header()
     st.markdown(render_icon(ICON_ANTRIAN, margin_bottom=10), unsafe_allow_html=True)
     st.markdown("""
     <style>
     .now-playing-card {
-        position: relative;
-        padding: 20px 24px;
-        border: 1px solid #00f2ff;
-        border-radius: 14px;
+        position: relative; padding: 20px 24px; border: 1px solid #00f2ff; border-radius: 14px;
         background: linear-gradient(135deg, rgba(0,242,255,0.10), rgba(0,242,255,0.02));
-        box-shadow: 0 0 20px rgba(0,242,255,0.25);
-        margin-bottom: 22px;
-        display: flex;
-        align-items: center;
-        gap: 16px;
+        box-shadow: 0 0 20px rgba(0,242,255,0.25); margin-bottom: 22px;
+        display: flex; align-items: center; gap: 16px;
     }
-    .eq-bars {
-        display: flex;
-        align-items: flex-end;
-        gap: 3px;
-        height: 24px;
-        flex-shrink: 0;
-    }
-    .eq-bars span {
-        display: block;
-        width: 4px;
-        background: #00f2ff;
-        border-radius: 2px;
-        animation: eq 1s ease-in-out infinite;
-    }
+    .eq-bars { display: flex; align-items: flex-end; gap: 3px; height: 24px; flex-shrink: 0; }
+    .eq-bars span { display: block; width: 4px; background: #00f2ff; border-radius: 2px; animation: eq 1s ease-in-out infinite; }
     .eq-bars span:nth-child(1) { height: 40%; animation-delay: 0s; }
     .eq-bars span:nth-child(2) { height: 100%; animation-delay: 0.2s; }
     .eq-bars span:nth-child(3) { height: 65%; animation-delay: 0.4s; }
     .eq-bars span:nth-child(4) { height: 85%; animation-delay: 0.1s; }
-    @keyframes eq {
-        0%, 100% { transform: scaleY(0.4); }
-        50% { transform: scaleY(1); }
-    }
-    .np-label {
-        font-family: 'Orbitron', sans-serif;
-        font-size: 0.7rem;
-        letter-spacing: 2px;
-        color: #00f2ff;
-        margin-bottom: 4px;
-    }
-    .np-song {
-        font-family: 'Rajdhani', sans-serif;
-        font-size: 1.25rem;
-        color: white;
-        font-weight: 700;
-        margin: 0;
-    }
-    .np-sub {
-        font-family: 'Rajdhani', sans-serif;
-        font-size: 0.9rem;
-        color: #aaaaaa;
-        margin: 2px 0 0 0;
-    }
+    @keyframes eq { 0%, 100% { transform: scaleY(0.4); } 50% { transform: scaleY(1); } }
+    .np-label { font-family: 'Orbitron', sans-serif; font-size: 0.7rem; letter-spacing: 2px; color: #00f2ff; margin-bottom: 4px; }
+    .np-song { font-family: 'Rajdhani', sans-serif; font-size: 1.25rem; color: white; font-weight: 700; margin: 0; }
+    .np-sub { font-family: 'Rajdhani', sans-serif; font-size: 0.9rem; color: #aaaaaa; margin: 2px 0 0 0; }
 
     .queue-row {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        padding: 12px 18px;
-        border: 1px solid rgba(0, 242, 255, 0.2);
-        border-radius: 10px;
-        background: rgba(255,255,255,0.02);
-        margin-bottom: 10px;
+        display: flex; align-items: center; gap: 14px; padding: 12px 18px;
+        border: 1px solid rgba(0, 242, 255, 0.2); border-radius: 10px;
+        background: rgba(255,255,255,0.02); margin-bottom: 10px;
     }
     .rank-badge {
-        flex-shrink: 0;
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        border: 1px solid rgba(0,242,255,0.5);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-family: 'Orbitron', sans-serif;
-        font-size: 0.8rem;
-        color: #00f2ff;
+        flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%;
+        border: 1px solid rgba(0,242,255,0.5); display: flex; align-items: center; justify-content: center;
+        font-family: 'Orbitron', sans-serif; font-size: 0.8rem; color: #00f2ff;
     }
     .avatar-badge {
-        flex-shrink: 0;
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        background: rgba(0,242,255,0.15);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-family: 'Rajdhani', sans-serif;
-        font-weight: 700;
-        color: white;
-        font-size: 0.85rem;
+        flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%; background: rgba(0,242,255,0.15);
+        display: flex; align-items: center; justify-content: center;
+        font-family: 'Rajdhani', sans-serif; font-weight: 700; color: white; font-size: 0.85rem;
     }
     .queue-info { flex-grow: 1; min-width: 0; }
     .queue-info .song {
-        font-family: 'Rajdhani', sans-serif;
-        color: white;
-        font-size: 1rem;
-        margin: 0;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        font-family: 'Rajdhani', sans-serif; color: white; font-size: 1rem; margin: 0;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-    .queue-info .meta {
-        font-family: 'Rajdhani', sans-serif;
-        color: #999999;
-        font-size: 0.82rem;
-        margin: 2px 0 0 0;
-    }
+    .queue-info .meta { font-family: 'Rajdhani', sans-serif; color: #999999; font-size: 0.82rem; margin: 2px 0 0 0; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -1186,14 +975,10 @@ elif st.session_state.menu_pilihan == 'Queue':
         st.warning("No queue data yet.")
     else:
         with col_count:
-            st.markdown(
-                f"<p class='ec-muted' style='padding-top:8px;'>{len(queue_data)} song(s) in the queue</p>",
-                unsafe_allow_html=True
-            )
+            st.markdown(f"<p class='ec-muted' style='padding-top:8px;'>{len(queue_data)} song(s) in the queue</p>", unsafe_allow_html=True)
 
         now_playing = queue_data[0]
-
-        now_playing_html = f"""
+        st.markdown(f"""
         <div class="now-playing-card">
             <div class="eq-bars"><span></span><span></span><span></span><span></span></div>
             <div>
@@ -1202,29 +987,24 @@ elif st.session_state.menu_pilihan == 'Queue':
                 <p class="np-sub">{now_playing['name']} · {now_playing['class']}</p>
             </div>
         </div>
-        """
-        st.markdown(now_playing_html, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
 
         upcoming = queue_data[1:]
-
         st.markdown("<p class='ec-muted' style='letter-spacing:1px; font-size:0.9rem;'>UP NEXT</p>", unsafe_allow_html=True)
 
         if not upcoming:
             st.info("No one else in the queue yet.")
         else:
             total_pages = max(1, (len(upcoming) - 1) // QUEUE_PER_PAGE + 1)
-            # Guard against a stored page number being out of range (e.g. if
-            # the queue got shorter since the last visit).
             st.session_state.queue_page = min(st.session_state.queue_page, total_pages - 1)
 
             start = st.session_state.queue_page * QUEUE_PER_PAGE
-            end = start + QUEUE_PER_PAGE
-            upcoming_page = upcoming[start:end]
+            upcoming_page = upcoming[start:start + QUEUE_PER_PAGE]
 
             for idx, item in enumerate(upcoming_page, start=start + 1):
                 nama_item = item["name"] or "-"
                 inisial_item = nama_item[0].upper() if nama_item not in ("-", "") else "?"
-                row_html = f"""
+                st.markdown(f"""
                 <div class="queue-row">
                     <div class="rank-badge">{idx}</div>
                     <div class="avatar-badge">{inisial_item}</div>
@@ -1233,39 +1013,17 @@ elif st.session_state.menu_pilihan == 'Queue':
                         <p class="meta">{item['name']} · {item['class']}</p>
                     </div>
                 </div>
-                """
-                st.markdown(row_html, unsafe_allow_html=True)
+                """, unsafe_allow_html=True)
 
-            if total_pages > 1:
-                st.write("##")
-                p_prev, p_info, p_next = st.columns([1, 2, 1])
-                with p_prev:
-                    st.markdown(render_icon(ICON_BACK, margin_bottom=2), unsafe_allow_html=True)
-                    if st.button("PREV", use_container_width=True, disabled=st.session_state.queue_page == 0, key="queue_prev"):
-                        st.session_state.queue_page -= 1
-                        st.rerun()
-                with p_info:
-                    st.markdown(
-                        f"<p class='page-indicator'>PAGE {st.session_state.queue_page + 1} / {total_pages}</p>",
-                        unsafe_allow_html=True
-                    )
-                with p_next:
-                    st.markdown(render_icon(ICON_NEXT, margin_bottom=2), unsafe_allow_html=True)
-                    if st.button("NEXT", use_container_width=True, disabled=st.session_state.queue_page >= total_pages - 1, key="queue_next"):
-                        st.session_state.queue_page += 1
-                        st.rerun()
+            render_pagination("queue_page", total_pages, key_prefix="queue")
 
 # ==================== GALLERY MENU ====================
 elif st.session_state.menu_pilihan == 'Galeri':
-    _, cb, _ = st.columns([2, 1, 2])
-    with cb:
-        tombol_dashboard()
-
+    render_menu_header()
     st.markdown("<h2 class='ec-title'>GALLERY</h2>", unsafe_allow_html=True)
 
     if st.session_state.sub_menu_galeri is None:
-        _, col_galeri, _ = st.columns([1, 2, 1])
-        with col_galeri:
+        with centered():
             g1, g2 = st.columns(2)
             with g1:
                 st.markdown(render_icon(ICON_KAMERA), unsafe_allow_html=True)
@@ -1290,26 +1048,22 @@ elif st.session_state.menu_pilihan == 'Galeri':
 
         with c_select:
             angkatan = st.selectbox(
-                "SELECT BATCH",
-                DAFTAR_BATCH,
+                "SELECT BATCH", DAFTAR_BATCH,
                 index=DAFTAR_BATCH.index(st.session_state.angkatan_pilihan) if st.session_state.angkatan_pilihan in DAFTAR_BATCH else 0,
                 label_visibility="collapsed"
             )
             if angkatan != st.session_state.angkatan_pilihan:
-                st.session_state.galeri_page = 0  # reset page when the batch changes
+                st.session_state.galeri_page = 0
             st.session_state.angkatan_pilihan = angkatan
 
         path_pencarian = f"{st.session_state.sub_menu_galeri}/{st.session_state.angkatan_pilihan}"
 
-        _, col_search, _ = st.columns([1, 2, 1])
-        with col_search:
+        with centered():
             st.markdown(render_icon(ICON_SEARCH, margin_bottom=2), unsafe_allow_html=True)
             search_query = st.text_input(
-                "Search photos",
-                value=st.session_state.galeri_search,
+                "Search photos", value=st.session_state.galeri_search,
                 placeholder="Search by photo name (e.g. demo day, meeting)...",
-                label_visibility="collapsed",
-                key="galeri_search_input",
+                label_visibility="collapsed", key="galeri_search_input",
             )
             if search_query != st.session_state.galeri_search:
                 st.session_state.galeri_search = search_query
@@ -1327,8 +1081,6 @@ elif st.session_state.menu_pilihan == 'Galeri':
         images = get_photos_from_github(path_pencarian)
         skeleton_slot.empty()
 
-        # Search filters photo file names before pagination is applied, so
-        # page numbers/counts always reflect the filtered result set.
         search_term = st.session_state.galeri_search.strip().lower()
         if search_term:
             def _cocok_pencarian(url):
@@ -1338,18 +1090,14 @@ elif st.session_state.menu_pilihan == 'Galeri':
 
         if images:
             total_pages = max(1, (len(images) - 1) // GALERI_PER_PAGE + 1)
-            # Guard against a stored page number being out of range
-            # (e.g. if the photo count went down since the last visit).
             st.session_state.galeri_page = min(st.session_state.galeri_page, total_pages - 1)
 
             start = st.session_state.galeri_page * GALERI_PER_PAGE
-            end = start + GALERI_PER_PAGE
-            images_page = images[start:end]
+            images_page = images[start:start + GALERI_PER_PAGE]
 
             cols = st.columns(3)
             for idx, img_url in enumerate(images_page):
-                file_name_encoded = img_url.split('/')[-1].rsplit('.', 1)[0]
-                file_name_decoded = unquote(file_name_encoded)
+                file_name_decoded = unquote(img_url.split('/')[-1].rsplit('.', 1)[0])
                 clean_name = file_name_decoded.replace('-', ' ').replace('_', ' ').upper()
 
                 with cols[idx % 3]:
@@ -1358,24 +1106,7 @@ elif st.session_state.menu_pilihan == 'Galeri':
                     if st.button("Zoom", key=f"lightbox_{start + idx}_{path_pencarian}", use_container_width=True):
                         tampilkan_lightbox(img_url, clean_name)
 
-            if total_pages > 1:
-                st.write("##")
-                p_prev, p_info, p_next = st.columns([1, 2, 1])
-                with p_prev:
-                    st.markdown(render_icon(ICON_BACK, margin_bottom=2), unsafe_allow_html=True)
-                    if st.button("PREV", use_container_width=True, disabled=st.session_state.galeri_page == 0):
-                        st.session_state.galeri_page -= 1
-                        st.rerun()
-                with p_info:
-                    st.markdown(
-                        f"<p class='page-indicator'>PAGE {st.session_state.galeri_page + 1} / {total_pages}</p>",
-                        unsafe_allow_html=True
-                    )
-                with p_next:
-                    st.markdown(render_icon(ICON_NEXT, margin_bottom=2), unsafe_allow_html=True)
-                    if st.button("NEXT", use_container_width=True, disabled=st.session_state.galeri_page >= total_pages - 1):
-                        st.session_state.galeri_page += 1
-                        st.rerun()
+            render_pagination("galeri_page", total_pages, key_prefix="galeri")
         else:
             if search_term:
                 st.warning(f"No photos found matching \"{st.session_state.galeri_search.strip()}\".")
@@ -1384,17 +1115,12 @@ elif st.session_state.menu_pilihan == 'Galeri':
 
 # ==================== CLUB DEMO MENU ====================
 elif st.session_state.menu_pilihan == 'Demo':
-    _, cb, _ = st.columns([2, 1, 2])
-    with cb:
-        tombol_dashboard()
-
+    render_menu_header()
     st.markdown("<h2 class='ec-title' style='margin-bottom:20px;'>CLUB DEMO</h2>", unsafe_allow_html=True)
 
-    _, c_select_demo, _ = st.columns([2, 1, 2])
-    with c_select_demo:
+    with centered((2, 1, 2)):
         angkatan_demo = st.selectbox(
-            "SELECT DEMO BATCH",
-            DAFTAR_BATCH,
+            "SELECT DEMO BATCH", DAFTAR_BATCH,
             index=DAFTAR_BATCH.index(st.session_state.angkatan_demo) if st.session_state.angkatan_demo in DAFTAR_BATCH else 0,
             label_visibility="visible"
         )
@@ -1402,35 +1128,29 @@ elif st.session_state.menu_pilihan == 'Demo':
 
     st.write("##")
 
-    _, col_demo_content, _ = st.columns([1, 2, 1])
-    with col_demo_content:
+    with centered():
         data_demo = get_demo_data_from_sheet()
         list_link = data_demo.get(st.session_state.angkatan_demo, [])
 
         item_siap = [item for item in list_link if item['judul'] != "-" and item['url'] != "-"]
         item_belum_siap = len(list_link) - len(item_siap)
 
-        if item_siap:
-            for item in item_siap:
-                st.markdown(f"""
-                    <div class="ec-card">
-                        <h4 style="font-family: 'Rajdhani'; color: white; margin-bottom: 15px; letter-spacing: 1px;">{item['judul'].upper()}</h4>
-                    </div>
-                """, unsafe_allow_html=True)
-                try:
-                    st.video(item['url'])
-                except Exception:
-                    logger.exception("Failed to embed demo video: %s", item['url'])
-                    st.warning("This video can't be embedded — use the direct link below instead.")
-                st.markdown(render_icon(ICON_EKSTERNAL, margin_bottom=2), unsafe_allow_html=True)
-                st.link_button("OPEN IN YOUTUBE", item['url'], use_container_width=True)
-                st.write("")
+        for item in item_siap:
+            st.markdown(f'<div class="ec-card"><h4>{item["judul"].upper()}</h4></div>', unsafe_allow_html=True)
+            try:
+                st.video(item['url'])
+            except Exception:
+                logger.exception("Failed to embed demo video: %s", item['url'])
+                st.warning("This video can't be embedded — use the direct link below instead.")
+            st.markdown(render_icon(ICON_EKSTERNAL, margin_bottom=2), unsafe_allow_html=True)
+            st.link_button("OPEN IN YOUTUBE", item['url'], use_container_width=True)
+            st.write("")
 
         if item_belum_siap > 0:
             st.markdown(f"""
-                <div class="ec-card" style="opacity: 0.5;">
-                    <h4 style="font-family: 'Rajdhani'; color: #00f2ff; margin-bottom: 5px; letter-spacing: 1px;">COMING SOON</h4>
-                    <p class="ec-text" style="font-size: 0.85rem; margin: 0;">{item_belum_siap} demo video(s) haven't been uploaded</p>
+                <div class="ec-card faded">
+                    <h4>COMING SOON</h4>
+                    <p style="font-size: 0.85rem;">{item_belum_siap} demo video(s) haven't been uploaded</p>
                 </div>
             """, unsafe_allow_html=True)
 
@@ -1439,16 +1159,12 @@ elif st.session_state.menu_pilihan == 'Demo':
 
 # ==================== WORD OF THE DAY MENU ====================
 elif st.session_state.menu_pilihan == 'WOTD':
-    _, cb, _ = st.columns([2, 1, 2])
-    with cb:
-        tombol_dashboard()
-
+    render_menu_header()
     st.markdown(render_icon(ICON_BUKU, margin_bottom=10), unsafe_allow_html=True)
     st.markdown("<h2 class='ec-title'>WORD OF THE DAY</h2>", unsafe_allow_html=True)
 
     st.write("##")
-    _, col_wotd, _ = st.columns([1, 2, 1])
-    with col_wotd:
+    with centered():
         wotd = get_wotd_from_sheet()
         st.markdown(f"""
             <div class="ec-card" style="text-align:center;">
@@ -1467,10 +1183,7 @@ elif st.session_state.menu_pilihan == 'WOTD':
 
 # ==================== ABOUT US MENU ====================
 elif st.session_state.menu_pilihan == 'Tentang':
-    _, cb, _ = st.columns([2, 1, 2])
-    with cb:
-        tombol_dashboard()
-
+    render_menu_header()
     st.markdown(render_icon(ICON_USERS, margin_bottom=10), unsafe_allow_html=True)
     st.markdown("<h2 class='ec-title' style='margin-bottom:10px;'>ABOUT US</h2>", unsafe_allow_html=True)
     st.markdown("""
@@ -1479,28 +1192,24 @@ elif st.session_state.menu_pilihan == 'Tentang':
         </p>
     """, unsafe_allow_html=True)
 
-    _, col_pengurus, _ = st.columns([1, 2, 1])
-    with col_pengurus:
+    with centered():
         data_pengurus = get_pengurus_from_sheet()
-
         total_pengurus_terisi = sum(1 for o in data_pengurus if o['nama'] != "-")
-        # Uses the cached get_total_photos() helper instead of recomputing
-        # the photo count on every visit to this page.
         total_foto_semua_batch = get_total_photos()
 
         s1, s2 = st.columns(2)
         with s1:
             st.markdown(f"""
                 <div class="ec-stat-card">
-                    <h4 style="font-family:'Rajdhani'; color:#00f2ff; margin-bottom:6px; letter-spacing:1px; font-size:0.8rem;">TOTAL PHOTOS</h4>
-                    <p style="font-family:'Orbitron'; color:white; font-size:1.6rem; margin:0; font-weight:700;">{total_foto_semua_batch}</p>
+                    <h4>TOTAL PHOTOS</h4>
+                    <p class="stat-value">{total_foto_semua_batch}</p>
                 </div>
             """, unsafe_allow_html=True)
         with s2:
             st.markdown(f"""
                 <div class="ec-stat-card">
-                    <h4 style="font-family:'Rajdhani'; color:#00f2ff; margin-bottom:6px; letter-spacing:1px; font-size:0.8rem;">COMMITTEE POSITIONS FILLED</h4>
-                    <p style="font-family:'Orbitron'; color:white; font-size:1.6rem; margin:0; font-weight:700;">{total_pengurus_terisi}/{len(data_pengurus)}</p>
+                    <h4>COMMITTEE POSITIONS FILLED</h4>
+                    <p class="stat-value">{total_pengurus_terisi}/{len(data_pengurus)}</p>
                 </div>
             """, unsafe_allow_html=True)
 
@@ -1514,8 +1223,8 @@ elif st.session_state.menu_pilihan == 'Tentang':
                 st.markdown(f"""
                     <div class="ec-card">
                         {render_icon(icon_jabatan, margin_bottom=6)}
-                        <h4 style="font-family:'Rajdhani'; color:#00f2ff; margin-bottom:6px; letter-spacing:1px; font-size:0.8rem;">{orang['jabatan'].upper()}</h4>
-                        <p style="font-family:'Rajdhani'; color:white; font-size:1rem; margin:0; font-weight:600;">{nama_tampil}</p>
+                        <h4>{orang['jabatan'].upper()}</h4>
+                        <p style="font-weight:600;">{nama_tampil}</p>
                     </div>
                 """, unsafe_allow_html=True)
 
@@ -1551,20 +1260,11 @@ with st.sidebar:
 
 st.markdown("""
     <div style="
-        position: fixed;
-        left: 0;
-        bottom: 0;
-        width: 100%;
-        background-color: rgba(5, 7, 10, 0.9);
-        color: #00f2ff;
-        text-align: center;
-        padding: 10px 0;
-        font-family: 'Rajdhani', sans-serif;
-        font-size: 0.8rem;
-        letter-spacing: 2px;
-        border-top: 1px solid rgba(0, 242, 255, 0.2);
-        backdrop-filter: blur(5px);
-        z-index: 999;
+        position: fixed; left: 0; bottom: 0; width: 100%;
+        background-color: rgba(5, 7, 10, 0.9); color: #00f2ff; text-align: center;
+        padding: 10px 0; font-family: 'Rajdhani', sans-serif; font-size: 0.8rem;
+        letter-spacing: 2px; border-top: 1px solid rgba(0, 242, 255, 0.2);
+        backdrop-filter: blur(5px); z-index: 999;
     ">
         © 2026 • ARYASATYA KEANDRE - DAVIN PRIMA • ENGLISH CLUB • SMAN 1 DEPOK
     </div>
