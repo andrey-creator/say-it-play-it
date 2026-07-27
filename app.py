@@ -68,7 +68,6 @@ ICON_ANTRIAN = '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stro
 ICON_FEEDBACK = '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>'
 ICON_ROKET = '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>'
 ICON_USERS = '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>'
-ICON_TV = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>'
 ICON_BACK = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>'
 ICON_NEXT = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>'
 ICON_KAMERA = '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>'
@@ -485,84 +484,6 @@ if 'queue_page' not in st.session_state:
     st.session_state.queue_page = 0
 if 'simple_mode' not in st.session_state:
     st.session_state.simple_mode = False
-
-# ==================== KIOSK MODE (TV / NOTICE BOARD) ====================
-# Access via URL: <dashboard-url>?kiosk=1
-if st.query_params.get("kiosk") == "1":
-    st.markdown("""
-        <style>
-        [data-testid='stSidebar'], [data-testid='collapsedControl'], header, footer,
-        .block-container { display: none !important; padding: 0 !important; margin: 0 !important; }
-        .stApp { background-color: #000000; }
-        </style>
-    """, unsafe_allow_html=True)
-
-    def get_semua_foto_galeri():
-        semua = []
-        for batch in DAFTAR_BATCH:
-            semua.extend(get_photos_from_github(f"activity/{batch}"))
-        return semua
-
-    gambar_kiosk = get_semua_foto_galeri()
-
-    if not gambar_kiosk:
-        st.warning("There are no photos to display in kiosk mode yet.")
-        st.stop()
-
-    kiosk_html = f"""
-    <div style="position:relative; width:100%; height:100vh; background:#000000; overflow:hidden;">
-      <img id="kiosk-img" src="{gambar_kiosk[0]}"
-           style="width:100%; height:100%; object-fit:contain; transition:opacity 1s ease-in-out; opacity:1;">
-      <div style="position:absolute; bottom:24px; left:0; right:0; text-align:center;
-                  font-family:'Orbitron', sans-serif; color:#00f2ff; letter-spacing:3px;
-                  text-shadow:0 0 10px #00f2ff; font-size:1rem;">
-        ENGLISH CLUB • SMAN 1 DEPOK
-      </div>
-    </div>
-    <script>
-      let gambarList = {gambar_kiosk};
-      let idx = 0;
-      const el = document.getElementById("kiosk-img");
-      const daftarBatch = {DAFTAR_BATCH};
-
-      async function refreshKioskPhotos() {{
-        try {{
-          let semuaBaru = [];
-          for (const batch of daftarBatch) {{
-            const res = await fetch(`https://api.github.com/repos/andrey-creator/say-it-play-it/contents/photos/activity/${{batch}}`);
-            if (!res.ok) continue;
-            const files = await res.json();
-            if (Array.isArray(files)) {{
-              const urls = files
-                .filter(f => /\\.(png|jpe?g|webp)$/i.test(f.name))
-                .map(f => f.download_url)
-                .reverse();
-              semuaBaru = semuaBaru.concat(urls);
-            }}
-          }}
-          if (semuaBaru.length > 0) {{
-            gambarList = semuaBaru;
-            if (idx >= gambarList.length) idx = 0;
-          }}
-        }} catch (err) {{
-          console.log("Kiosk photo refresh failed, keeping current list", err);
-        }}
-      }}
-
-      setInterval(refreshKioskPhotos, 300000);
-
-      setInterval(() => {{
-          idx = (idx + 1) % gambarList.length;
-          el.style.opacity = 0;
-          setTimeout(() => {{
-              el.src = gambarList[idx];
-              el.style.opacity = 1;
-          }}, 800);
-      }}, 6000);
-    </script>
-    """
-    components.html(kiosk_html, height=900)
-    st.stop()
 
 # Styling CSS (neon/default mode)
 st.markdown("""
@@ -1243,10 +1164,6 @@ with st.sidebar:
         st.rerun()
     st.caption("")
 
-    st.markdown("---")
-    st.markdown(render_icon(ICON_TV, margin_bottom=4), unsafe_allow_html=True)
-    st.link_button("KIOSK MODE (TV)", "?kiosk=1", use_container_width=True)
-    st.caption("")
     st.markdown("---")
     with st.expander("ADMIN"):
         pw = st.text_input("ACCESS CODE", type="password")
