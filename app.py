@@ -30,8 +30,8 @@ QUEUE_PER_PAGE = 10
 
 
 EVENT_BERIKUTNYA_FALLBACK = {
-    "nama": "NEXT DEMO DAY",
-    "tanggal": "2026-09-05T09:00:00",
+    "nama": "NEXT SAY IT, PLAY IT BROADCAST DAY",
+    "tanggal": "2026-10-07T12:00:00",
 }
 
 
