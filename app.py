@@ -2,6 +2,7 @@ import csv
 import io
 import logging
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import streamlit as st
 import streamlit.components.v1 as components
@@ -168,6 +169,57 @@ inject_og_tags()
 # a row-parser, and a fallback value. Cuts ~100 lines of duplicated
 # try/except/logging boilerplate down to a handful of small parser
 # functions below.
+TZ_WIB = ZoneInfo("Asia/Jakarta")
+
+
+def now_wib():
+    """Current Jakarta wall-clock time (naive). Streamlit Cloud servers run in
+    UTC, so a bare datetime.now() is 7 hours behind and would pick the wrong
+    "today" for Word of the Day and the wrong "upcoming" event."""
+    return datetime.now(TZ_WIB).replace(tzinfo=None)
+
+
+_FORMAT_TANGGAL = (
+    "%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M", "%Y-%m-%d %H.%M", "%Y-%m-%d",
+    "%d/%m/%Y %H:%M:%S", "%d/%m/%Y %H:%M", "%d/%m/%Y %H.%M", "%d/%m/%Y",
+    "%d-%m-%Y %H:%M:%S", "%d-%m-%Y %H:%M", "%d-%m-%Y %H.%M", "%d-%m-%Y",
+    "%Y/%m/%d %H:%M", "%Y/%m/%d",
+)
+
+
+def parse_tanggal(text):
+    """Forgiving date parser for values typed in Google Sheets. Sheets often
+    reformats dates (e.g. 2026-11-12 becomes 12/11/2026), which a strict
+    ISO parser rejects. Returns a datetime, or None if nothing matches."""
+    text = (text or "").strip()
+    if not text:
+        return None
+    try:
+        return datetime.fromisoformat(text)
+    except ValueError:
+        pass
+    for fmt in _FORMAT_TANGGAL:
+        try:
+            return datetime.strptime(text, fmt)
+        except ValueError:
+            continue
+    return None
+
+
+# Only the raw download is cached. Parsing and the "which row is current?"
+# logic run on every page load, so they are always up to date. A failed
+# download raises, and Streamlit never caches an exception, so one network
+# hiccup can no longer freeze the fallback data on screen for a whole TTL.
+@st.cache_data(ttl=60, show_spinner=False)
+def _download_csv(csv_url):
+    response = requests.get(csv_url, timeout=10)
+    response.raise_for_status()
+    text = response.text.lstrip('\ufeff')
+    if text.lstrip()[:1] == "<":
+        raise ValueError("The link returned a web page instead of CSV - is the sheet still 'Published to the web' as CSV?")
+    return text
+
+
 def _fetch_sheet_rows(secrets_key, row_parser, fallback, label):
     """
     Fetch a CSV published from Google Sheets and turn it into structured
@@ -177,16 +229,11 @@ def _fetch_sheet_rows(secrets_key, row_parser, fallback, label):
     """
     csv_url = st.secrets.get(secrets_key)
     if not csv_url:
+        logger.warning("%s: secret %s is not set, using fallback data", label, secrets_key)
         return fallback
 
     try:
-        response = requests.get(csv_url, timeout=10)
-        if response.status_code != 200:
-            logger.warning("%s sheet returned status %s", label, response.status_code)
-            st.toast(f"Failed to fetch {label} from the Sheet, using fallback data.", icon=":material/warning:")
-            return fallback
-
-        raw_text = response.text.lstrip('\ufeff')
+        raw_text = _download_csv(csv_url)
         reader = csv.DictReader(io.StringIO(raw_text))
 
         results = []
@@ -196,6 +243,8 @@ def _fetch_sheet_rows(secrets_key, row_parser, fallback, label):
             if item is not None:
                 results.append(item)
 
+        if not results:
+            logger.warning("%s: no usable rows parsed from the sheet, using fallback data", label)
         return results if results else fallback
 
     except requests.exceptions.RequestException:
@@ -303,30 +352,27 @@ def get_demo_data_from_sheet():
         return DATA_DEMO_EKSKUL_FALLBACK
 
 
-@st.cache_data(ttl=300)
 def get_event_from_sheet():
-    """Nearest upcoming event (columns: nama, tanggal - ISO format)."""
+    """Nearest upcoming event (columns: nama, tanggal)."""
     def parse(row_norm, _i):
         nama = row_norm.get("nama", "")
-        tanggal_str = row_norm.get("tanggal", "")
-        if not nama or not tanggal_str:
+        dt = parse_tanggal(row_norm.get("tanggal", ""))
+        if not nama or dt is None:
+            if nama:
+                logger.warning("event: skipped row %r - unreadable date %r", nama, row_norm.get("tanggal", ""))
             return None
-        try:
-            return {"nama": nama, "tanggal": tanggal_str, "_dt": datetime.fromisoformat(tanggal_str)}
-        except ValueError:
-            return None
+        return {"nama": nama, "tanggal": dt.isoformat(), "_dt": dt}
 
     kandidat = _fetch_sheet_rows("EVENT_SHEET_CSV_URL", parse, None, "event")
     if kandidat is None:
         return EVENT_BERIKUTNYA_FALLBACK
 
-    sekarang = datetime.now()
+    sekarang = now_wib()
     akan_datang = sorted([k for k in kandidat if k["_dt"] >= sekarang], key=lambda k: k["_dt"])
     terpilih = akan_datang[0] if akan_datang else sorted(kandidat, key=lambda k: k["_dt"])[-1]
     return {"nama": terpilih["nama"], "tanggal": terpilih["tanggal"]}
 
 
-@st.cache_data(ttl=3600)
 def get_pengurus_from_sheet():
     """Committee data (columns: nama, jabatan, urutan [optional])."""
     def parse(row_norm, i):
@@ -349,7 +395,6 @@ def get_pengurus_from_sheet():
     return [{"nama": d["nama"], "jabatan": d["jabatan"]} for d in data]
 
 
-@st.cache_data(ttl=3600)
 def get_wotd_from_sheet():
     def parse(row_norm, _i):
         kata = row_norm.get("kata", "")
@@ -368,16 +413,20 @@ def get_wotd_from_sheet():
     if daftar is None:
         return WOTD_FALLBACK
 
-    hari_ini_str = datetime.now().strftime("%Y-%m-%d")
-    cocok = [d for d in daftar if d["tanggal"] == hari_ini_str]
+    sekarang = now_wib()
+    hari_ini = sekarang.date()
+    cocok = []
+    for d in daftar:
+        dt = parse_tanggal(d["tanggal"])
+        if dt is not None and dt.date() == hari_ini:
+            cocok.append(d)
     if cocok:
-        return cocok[0]
+        return cocok[-1]  # if a date is listed twice, the lowest/latest edit wins
 
-    hari_ke_n = datetime.now().timetuple().tm_yday
+    hari_ke_n = sekarang.timetuple().tm_yday
     return daftar[hari_ke_n % len(daftar)]
 
 
-@st.cache_data(ttl=60)
 def get_queue_from_sheet():
     """Full song request queue - pagination is handled in the UI layer."""
     def cari_kolom(row_norm, *kandidat_key):
@@ -928,7 +977,7 @@ elif st.session_state.menu_pilihan == 'Queue':
     col_refresh, col_count = st.columns([1, 2])
     with col_refresh:
         if st.button("Refresh Queue"):
-            get_queue_from_sheet.clear()
+            _download_csv.clear()
             st.session_state.queue_page = 0
             st.rerun()
 
@@ -1214,6 +1263,44 @@ with st.sidebar:
             st.caption("ADMIN_PASSWORD is not set in secrets.")
         elif pw and pw == admin_password:
             st.link_button("DATABASE", "https://docs.google.com/spreadsheets/d/13a0SStLqMqXMO8fgUImPyMI8jhSEMMQJTE7hQSIYInY/edit?gid=1587199457#gid=1587199457", use_container_width=True)
+
+            if st.button("REFRESH ALL DATA NOW", use_container_width=True):
+                _download_csv.clear()
+                get_photos_from_github.clear()
+                get_demo_data_from_sheet.clear()
+                st.rerun()
+
+            if st.button("CHECK SHEET CONNECTIONS", use_container_width=True):
+                for label, key in (("Event / broadcast", "EVENT_SHEET_CSV_URL"),
+                                   ("Word of the Day", "WOTD_SHEET_CSV_URL"),
+                                   ("Committee", "PENGURUS_SHEET_CSV_URL"),
+                                   ("Queue", "QUEUE_SHEET_CSV_URL"),
+                                   ("Demo", "DEMO_SHEET_CSV_URL")):
+                    url = st.secrets.get(key)
+                    if not url:
+                        st.error(f"{label}: {key} is NOT set in secrets", icon=":material/error:")
+                        continue
+                    try:
+                        r = requests.get(url, timeout=10)
+                        body = r.text.lstrip('\ufeff')
+                        if r.status_code != 200:
+                            st.error(f"{label}: HTTP {r.status_code}", icon=":material/error:")
+                        elif body.lstrip()[:1] == "<":
+                            st.error(f"{label}: got a web page, not CSV. Re-publish the sheet to the web as CSV.", icon=":material/error:")
+                        else:
+                            rows = list(csv.DictReader(io.StringIO(body)))
+                            heads = [(h or "").strip() for h in (rows[0].keys() if rows else [])]
+                            st.success(f"{label}: OK, {len(rows)} rows. Columns: {', '.join(heads)}", icon=":material/check_circle:")
+                            if key in ("EVENT_SHEET_CSV_URL", "WOTD_SHEET_CSV_URL"):
+                                bad = [(row.get("tanggal") or "").strip() for row in rows
+                                       if (row.get("tanggal") or "").strip() and parse_tanggal(row.get("tanggal")) is None]
+                                if bad:
+                                    st.warning(f"{label}: unreadable dates -> {bad[:5]}", icon=":material/warning:")
+                    except Exception as e:
+                        st.error(f"{label}: {type(e).__name__}", icon=":material/error:")
+                st.caption(f"Server time (WIB): {now_wib():%Y-%m-%d %H:%M}")
+                st.caption(f"Event shown: {get_event_from_sheet()}")
+                st.caption(f"Word of the Day shown: {get_wotd_from_sheet().get('kata')}")
         elif pw:
             st.error("Incorrect access code.")
 
