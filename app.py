@@ -56,6 +56,11 @@ WOTD_FALLBACK = {
 WHATSAPP_GROUP_LINK = "https://chat.whatsapp.com/HXO5L4AhuXR5bBqzt1aFpc"
 WHATSAPP_QR_IMAGE_URL = "https://raw.githubusercontent.com/andrey-creator/say-it-play-it/main/QR_WhatsApp_Group.png"
 
+# Temporary switch: while the Google Form for song requests has problems,
+# the REQUEST SONG and QUEUE pages show an "Under Construction" notice.
+# Set to False (or set UNDER_CONSTRUCTION = false in secrets) to restore them.
+UNDER_CONSTRUCTION_DEFAULT = True
+
 # Default Google Form links. These can still be overridden via secrets
 # (REQUEST_FORM_URL / FEEDBACK_FORM_URL) if the forms ever need to change.
 REQUEST_FORM_URL_DEFAULT = "https://forms.gle/wXgZryNWAkyB7oog6"
@@ -650,6 +655,37 @@ def centered(ratio=(1, 2, 1)):
     return cols[1]
 
 
+ICON_KONSTRUKSI = '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>'
+
+
+def is_under_construction():
+    try:
+        return bool(st.secrets.get("UNDER_CONSTRUCTION", UNDER_CONSTRUCTION_DEFAULT))
+    except Exception:
+        return UNDER_CONSTRUCTION_DEFAULT
+
+
+def render_under_construction(icon, title):
+    """Shared 'Under Construction' notice for pages that are temporarily offline."""
+    render_menu_header()
+    st.markdown(render_icon(icon, margin_bottom=10), unsafe_allow_html=True)
+    st.markdown(f"<h2 class='ec-title'>{title}</h2>", unsafe_allow_html=True)
+    with centered((1, 3, 1)):
+        st.markdown(f"""
+        <div style="text-align:center; padding:32px 24px; margin-top:12px; border:1px dashed #00f2ff;
+                    border-radius:14px; background:linear-gradient(135deg, rgba(0,242,255,0.10), rgba(0,242,255,0.02));">
+            <div style="color:#00f2ff;">{render_icon(ICON_KONSTRUKSI, margin_bottom=8)}</div>
+            <div style="font-family:'Rajdhani', sans-serif; font-size:1.6rem; font-weight:700; letter-spacing:3px; color:#00f2ff;">
+                UNDER CONSTRUCTION
+            </div>
+            <p style="font-family:'Rajdhani', sans-serif; color:#dddddd; font-size:1.05rem; margin:10px 0 0 0;">
+                This feature is temporarily unavailable while we fix a problem.<br>
+                Please check back soon, thank you for your patience!
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+
 def render_menu_header():
     """Back-to-dashboard button, centered - used at the top of every submenu."""
     with centered((2, 1, 2)):
@@ -785,6 +821,9 @@ if st.session_state.menu_pilihan == 'Home':
         """, unsafe_allow_html=True)
 
 # ==================== REQUEST SONG MENU ====================
+elif st.session_state.menu_pilihan == 'Request' and is_under_construction():
+    render_under_construction(ICON_MUSIK, "REQUEST SONG")
+
 elif st.session_state.menu_pilihan == 'Request':
     render_menu_header()
     st.markdown(render_icon(ICON_MUSIK, margin_bottom=10), unsafe_allow_html=True)
@@ -835,6 +874,9 @@ elif st.session_state.menu_pilihan == 'WhatsApp':
         st.link_button("JOIN WHATSAPP GROUP", WHATSAPP_GROUP_LINK, use_container_width=True)
 
 # ==================== QUEUE MENU (REDESIGNED + PAGINATED) ====================
+elif st.session_state.menu_pilihan == 'Queue' and is_under_construction():
+    render_under_construction(ICON_ANTRIAN, "SONG QUEUE")
+
 elif st.session_state.menu_pilihan == 'Queue':
     render_menu_header()
     st.markdown(render_icon(ICON_ANTRIAN, margin_bottom=10), unsafe_allow_html=True)
